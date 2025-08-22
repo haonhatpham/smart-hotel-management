@@ -1,21 +1,17 @@
-## Smart Hotel Management – Topic Requirement & Database Schema
+## Smart Hotel Management – Topic Requirements & Database Schema
 
-### Giới thiệu
-Hệ thống quản lý khách sạn thông minh phục vụ đặt phòng trực tuyến, quản lý dịch vụ lưu trú, thanh toán và báo cáo thống kê. Mục tiêu là nâng cao trải nghiệm khách hàng và tối ưu vận hành cho ban quản lý.
+### Introduction
+An intelligent hotel management system that supports online room booking, stay services, payments, and management reports. The goal is to enhance guest experience while optimizing operations for hotel staff and management.
 
-### Yêu cầu môn học (Topic requirement)
-- **Kiến trúc**: Backend Spring MVC (Spring Boot), Spring Security cho xác thực/ủy quyền; Client phát triển ReactJS; giao tiếp qua RESTful API.
-- **Đăng ký/đăng nhập**: Tài khoản hệ thống và có thể tích hợp OAuth2 (Google/Facebook). Mật khẩu mã hóa BCrypt, JWT cho client.
-- **Phân hệ Admin**: Quản trị người dùng/quyền, danh mục phòng/loại phòng, quản lý đặt phòng nhiều phòng/đơn, dịch vụ, thanh toán, hóa đơn, housekeeping, duyệt/ẩn đánh giá, báo cáo.
-- **Phân hệ Client**: Tra cứu phòng trống theo ngày/loại/giá, đặt phòng trực tuyến (nhiều phòng/đơn), đặt dịch vụ kèm, thanh toán, nhận hóa đơn, đánh giá, quản lý hồ sơ.
-- **Báo cáo/Thống kê**: Tỷ lệ lấp phòng, doanh thu theo thời gian, top dịch vụ, điểm đánh giá.
-- **Vai trò**: `ADMIN`, `RECEPTION`, `HOUSEKEEPING`, `ACCOUNTANT`, `CUSTOMER` với phân quyền tương ứng endpoint.
+### Topic Requirements
+- **Architecture**: Backend using Spring MVC (Spring Boot) with Spring Security for authentication/authorization; Frontend using ReactJS; communication via RESTful APIs.
+- **Authentication**: Local registration/login and optional OAuth2 (Google/Facebook). Store passwords with BCrypt; use JWT for client authentication.
+- **Admin Portal**: Manage users/roles, room types/rooms, multi-room reservations per order, services, payments, invoices, housekeeping tasks, review moderation, and reports.
+- **Client Portal**: Search room availability by date/type/price, book rooms (multiple rooms per reservation), add-on services, make payments, receive invoices, submit reviews, and manage profile.
+- **Reports/Analytics**: Occupancy rate, revenue by period, top services, and customer ratings.
+- **Roles**: `ADMIN`, `RECEPTION`, `HOUSEKEEPING`, `ACCOUNTANT`, `CUSTOMER` with proper endpoint authorization.
 
-### Database Schema Diagram (Hình ảnh)
+### Database Schema Diagram (Image)
 
-![Database Schema](db-schema.png)
+![Database Schema](image-1.png)
 
-### Ghi chú
-- `RESERVATION_ROOMS` có ràng buộc UNIQUE `(reservation_id, room_id)` để tránh trùng một phòng nhiều lần trong cùng đơn.
-- Chỉ mục đi kèm phục vụ tra cứu nhanh theo ngày, trạng thái và thống kê doanh thu.
-- Để hình hiển thị, hãy lưu file sơ đồ tên `db-schema.png` cùng thư mục với file README (PNG/JPG đều được, đúng tên và đường dẫn như trên).
