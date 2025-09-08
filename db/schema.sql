@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS rooms (
   floor INT,
   status ENUM('AVAILABLE','OCCUPIED','CLEANING','MAINTENANCE') NOT NULL DEFAULT 'AVAILABLE',
   note TEXT,
+  image_url VARCHAR(500) NULL,
   CONSTRAINT fk_room_type FOREIGN KEY (room_type_id) REFERENCES room_types(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 CREATE INDEX idx_rooms_type_status ON rooms(room_type_id, status);

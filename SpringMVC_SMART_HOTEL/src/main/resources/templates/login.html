@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Đăng nhập - Smart Hotel</title>
+    <th:block th:replace="~{base :: bt}"></th:block>
+</head>
+<body>
+    <div class="d-flex align-items-center justify-content-center" style="min-height: 85vh; background-color: #f8f9fa;">
+        <div class="card shadow-sm" style="width: 100%; max-width: 420px;">
+            <div class="card-header text-center" style="background-color:#2c3e50; color:#fff;">
+                <h5 class="m-0"><i class="fas fa-hotel me-2"></i>Smart Hotel</h5>
+                <small>Đăng nhập để tiếp tục</small>
+            </div>
+            <div class="card-body p-4">
+                <div th:if="${param.error}" class="alert alert-danger py-2">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    Tên đăng nhập hoặc mật khẩu không đúng!
+                </div>
+
+                <form th:action="@{/login}" method="post">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Tên đăng nhập</label>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Nhập tên đăng nhập" required autocomplete="username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Mật khẩu</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Nhập mật khẩu" required autocomplete="current-password">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="remember-me" name="remember-me">
+                        <label class="form-check-label" for="remember-me">Ghi nhớ đăng nhập</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-sign-in-alt me-1"></i> Đăng nhập
+                    </button>
+                </form>
+            </div>
+            <div class="card-footer bg-white text-center">
+                <a th:href="@{/}" class="text-decoration-none">
+                    <i class="fas fa-arrow-left me-1"></i> Quay lại trang chủ
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{base :: footer}"></div>
+</body>
+</html>

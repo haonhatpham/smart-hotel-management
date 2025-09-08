@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence version="3.0" xmlns="https://jakarta.ee/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd">
-    <!-- Define Persistence Unit -->
-    <persistence-unit name="my_persistence_unit">
-        
-    </persistence-unit>
+  <!-- Define Persistence Unit -->
+  <persistence-unit name="my_persistence_unit">
+    <class>com.pnh.pojo.CustomerProfiles</class>
+    <class>com.pnh.pojo.Services</class>
+    <class>com.pnh.pojo.HousekeepingTasks</class>
+    <class>com.pnh.pojo.Users</class>
+    <class>com.pnh.pojo.ReservationRooms</class>
+    <class>com.pnh.pojo.Payments</class>
+    <class>com.pnh.pojo.Rooms</class>
+    <class>com.pnh.pojo.Invoices</class>
+    <class>com.pnh.pojo.Reservations</class>
+    <class>com.pnh.pojo.Reviews</class>
+    <class>com.pnh.pojo.RoomTypes</class>
+    <class>com.pnh.pojo.ServiceOrders</class>
+  </persistence-unit>
 </persistence>

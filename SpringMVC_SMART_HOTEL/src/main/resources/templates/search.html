@@ -1,0 +1,109 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Tra cứu phòng</title>
+    <th:block th:replace="base :: bt"></th:block>
+    <meta charset="UTF-8">
+</head>
+<body>
+<th:block th:replace="base :: menu"></th:block>
+<main class="container py-4">
+    <h1 class="mb-4 text-center">Tra cứu phòng trống</h1>
+
+    <!-- Form lọc -->
+    <div class="card p-3 mb-4">
+        <form class="row g-3" method="get" th:action="@{/rooms}">
+            <div class="col-md-3">
+                <label class="form-label" for="checkin">Ngày nhận phòng</label>
+                <input class="form-control" type="date" id="checkin" name="checkIn" th:value="${params['checkIn']}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="checkout">Ngày trả phòng</label>
+                <input class="form-control" type="date" id="checkout" name="checkOut" th:value="${params['checkOut']}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="roomTypeId">Loại phòng</label>
+                <select class="form-select" id="roomTypeId" name="roomTypeId">
+                    <option value="">Tất cả</option>
+                    <option th:each="t : ${roomTypes}"
+                            th:value="${t.id}"
+                            th:text="${t.name}"
+                            th:selected="${params['roomTypeId']} == ${t.id}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="priceDisplay">Giá tối đa (VNĐ/đêm)</label>
+                <input class="form-control" type="text" id="priceDisplay" placeholder="VD: 1.200.000" autocomplete="off">
+                <input type="hidden" id="maxPrice" name="maxPrice" th:value="${params['maxPrice']}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="minCapacity">Sức chứa tối thiểu</label>
+                <input class="form-control" type="number" id="minCapacity" name="minCapacity" min="1" step="1" th:value="${params['minCapacity']}">
+            </div>
+            <div class="col-md-2 align-self-end">
+                <button class="btn btn-primary w-100" type="submit">Tìm kiếm</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Kết quả (kiểu thẻ giống Booking) -->
+    <div class="row" th:if="${rooms} != null">
+        <div class="col-12 mb-3 d-flex justify-content-between">
+            <h5 class="mb-0">Kết quả</h5>
+            <small th:text="|Tìm thấy ${#lists.size(rooms)} phòng|">Tìm thấy 0 phòng</small>
+        </div>
+        <div class="col-md-6 col-lg-4 mb-3" th:each="r : ${rooms}">
+            <div class="card room-card h-100">
+                <img th:if="${r.imageUrl != null}" th:src="${r.imageUrl}" class="card-img-top" alt="Room image">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="card-title mb-1" th:text="'Phòng ' + ${r.roomNumber}">Phòng 101</h5>
+                        <span class="badge bg-success" th:if="${r.status == 'AVAILABLE'}">Trống</span>
+                        <span class="badge bg-secondary" th:if="${r.status == 'CLEANING'}">Đang dọn</span>
+                        <span class="badge bg-warning text-dark" th:if="${r.status == 'OCCUPIED'}">Có khách</span>
+                        <span class="badge bg-danger" th:if="${r.status == 'MAINTENANCE'}">Bảo trì</span>
+                    </div>
+                    <p class="text-muted mb-2" th:text="${r.roomTypeId != null ? r.roomTypeId.name : ''}">Standard</p>
+                    <ul class="list-unstyled mb-3 small">
+                        <li><i class="fas fa-layer-group me-2"></i>Tầng <span th:text="${r.floor}">1</span></li>
+                        <li><i class="fas fa-user-friends me-2"></i>Sức chứa <span th:text="${r.roomTypeId != null ? r.roomTypeId.capacity : ''}">2</span> người</li>
+                    </ul>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">Giá/đêm</div>
+                            <div class="fw-bold text-primary" th:text="${#numbers.formatDecimal(r.roomTypeId != null ? r.roomTypeId.price : 0, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">800,000 VNĐ</div>
+                        </div>
+                        <a th:href="@{'/rooms/' + ${r.id}}" class="btn btn-outline-primary btn-sm">Chi tiết</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12" th:if="${#lists.isEmpty(rooms)}">
+            <div class="alert alert-info text-center">Không có phòng phù hợp</div>
+        </div>
+    </div>
+
+</main>
+<th:block th:replace="base :: footer"></th:block>
+<script>
+    // Định dạng tiền nhập vào và đồng bộ vào hidden maxPrice
+    (function(){
+        const display = document.getElementById('priceDisplay');
+        const hidden = document.getElementById('maxPrice');
+        if(!display || !hidden) return;
+        // init from query
+        if(hidden.value){
+            display.value = Number(hidden.value).toLocaleString('vi-VN');
+        }
+        display.addEventListener('input', function(){
+            const raw = this.value.replace(/[^0-9]/g,'');
+            hidden.value = raw;
+            this.value = raw ? Number(raw).toLocaleString('vi-VN') : '';
+        });
+    })();
+</script>
+</body>
+</html>
+
+
+

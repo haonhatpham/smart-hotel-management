@@ -1,0 +1,44 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Chi tiết phòng</title>
+    <th:block th:replace="base :: bt"></th:block>
+    <meta charset="UTF-8">
+</head>
+<body>
+<th:block th:replace="base :: menu"></th:block>
+<main class="container py-4" th:if="${room} != null">
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <img class="img-fluid rounded w-100" th:src="${room.imageUrl}" alt="Room image">
+        </div>
+        <div class="col-lg-5">
+            <h2 th:text="'Phòng ' + ${room.roomNumber}">Phòng 101</h2>
+            <p class="text-muted" th:text="${room.roomTypeId != null ? room.roomTypeId.name : ''}">Standard</p>
+            <ul class="list-unstyled small">
+                <li><i class="fas fa-layer-group me-2"></i>Tầng <span th:text="${room.floor}">1</span></li>
+                <li><i class="fas fa-user-friends me-2"></i>Sức chứa <span th:text="${room.roomTypeId != null ? room.roomTypeId.capacity : ''}">2</span> người</li>
+                <li><i class="fas fa-info-circle me-2"></i>Trạng thái: <span th:text="${room.status}">AVAILABLE</span></li>
+            </ul>
+            <div class="mb-3">
+                <div class="text-muted small">Giá/đêm</div>
+                <div class="h4 text-primary" th:text="${#numbers.formatDecimal(room.roomTypeId != null ? room.roomTypeId.price : 0, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">800,000 VNĐ</div>
+            </div>
+            <a class="btn btn-primary" th:href="@{/rooms}">Xem phòng khác</a>
+        </div>
+    </div>
+
+    <hr class="my-4">
+    <h5>Tiện nghi nổi bật</h5>
+    <div class="row g-3">
+        <div class="col-6 col-md-3"><i class="fas fa-wifi me-2"></i>Wi‑Fi miễn phí</div>
+        <div class="col-6 col-md-3"><i class="fas fa-utensils me-2"></i>Bữa sáng</div>
+        <div class="col-6 col-md-3"><i class="fas fa-snowflake me-2"></i>Điều hòa</div>
+        <div class="col-6 col-md-3"><i class="fas fa-tv me-2"></i>TV</div>
+    </div>
+</main>
+<th:block th:replace="base :: footer"></th:block>
+</body>
+</html>
+
+

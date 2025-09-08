@@ -1,1 +1,263 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+        <title>Smart Hotel - Trang chủ</title>
+        <th:block th:replace="~{base :: bt}"></th:block>
+    </head>
+    <body>
+        <!-- Navigation -->
+        <th:block th:replace="~{base :: menu}"></th:block>
 
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h1 class="display-4 fw-bold">Chào mừng đến với Smart Hotel</h1>
+                        <p class="lead">Hệ thống quản lý khách sạn thông minh, mang đến trải nghiệm tuyệt vời cho khách hàng</p>
+                        <a href="/rooms" class="btn btn-primary btn-lg">
+                            <i class="fas fa-bed me-2"></i>Đặt phòng ngay
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="container mt-5">
+            <div class="row justify-content-center">
+                <div class="col-md-10">
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <h5 class="card-title text-center mb-4">
+                                <i class="fas fa-search me-2"></i>Tìm phòng
+                            </h5>
+                            <form th:action="@{/rooms}" method="get">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Ngày check-in</label>
+                                        <input type="date" class="form-control" name="checkIn">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Ngày check-out</label>
+                                        <input type="date" class="form-control" name="checkOut">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Loại phòng</label>
+                                        <select class="form-select" name="roomTypeId">
+                                            <option value="">Tất cả</option>
+                                            <option th:each="t : ${roomTypes}" th:value="${t.id}" th:text="${t.name}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Số người</label>
+                                        <select class="form-select" name="minCapacity">
+                                            <option value="">Tất cả</option>
+                                            <option value="1">1 người</option>
+                                            <option value="2">2 người</option>
+                                            <option value="3">3 người</option>
+                                            <option value="4">4+ người</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label" for="priceDisplayHome">Giá tối đa (VNĐ/đêm)</label>
+                                        <input class="form-control" type="text" id="priceDisplayHome" placeholder="VD: 1.200.000" autocomplete="off">
+                                        <input type="hidden" id="maxPriceHome" name="maxPrice">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">&nbsp;</label>
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-search me-2"></i>Tìm kiếm
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="container mt-5">
+            <h2 class="text-center mb-5">Tại sao chọn Smart Hotel?</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-mobile-alt fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Đặt phòng trực tuyến</h5>
+                            <p class="card-text">Đặt phòng nhanh chóng và tiện lợi qua website hoặc ứng dụng di động</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                            <h5 class="card-title">Thanh toán an toàn</h5>
+                            <p class="card-text">Hỗ trợ nhiều phương thức thanh toán với bảo mật cao</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-concierge-bell fa-3x text-warning mb-3"></i>
+                            <h5 class="card-title">Dịch vụ đa dạng</h5>
+                            <p class="card-text">Spa, nhà hàng, đưa đón sân bay và nhiều dịch vụ khác</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rooms Section -->
+        <div class="container mt-5">
+            <h2 class="text-center mb-5">Danh sách phòng</h2>
+            <div class="row" th:if="${rooms}">
+                <div class="col-md-4 mb-4" th:each="room : ${rooms}">
+                    <div class="card room-card h-100">
+                        <img th:if="${room.imageUrl}" th:src="${room.imageUrl}" class="card-img-top" alt="Room">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0" th:text="'Phòng ' + ${room.roomNumber}">Phòng 101</h5>
+                                <span class="badge" th:classappend="${room.status == 'AVAILABLE' ? 'bg-success' : room.status == 'OCCUPIED' ? 'bg-danger' : 'bg-warning'}" th:text="${room.status}">AVAILABLE</span>
+                            </div>
+                            <div class="small text-muted mb-2" th:if="${room.roomTypeId}">
+                                <i class="fas fa-users me-1"></i>
+                                <span th:text="${room.roomTypeId.capacity} + ' người'"></span>
+                                <span class="ms-2">• Tầng <span th:text="${room.floor}">1</span></span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-primary fw-bold" th:if="${room.roomTypeId}" th:text="${#numbers.formatDecimal(room.roomTypeId.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">500,000 VNĐ</span>
+                                <a class="btn btn-outline-primary btn-sm" th:href="@{'/rooms/' + ${room.id}}">Chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center" th:unless="${rooms}">
+                <p class="text-muted">Đang tải thông tin phòng...</p>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="container mt-5" sec:authorize="hasRole('ADMIN')">
+            <h2 class="text-center mb-5">Thống kê nhanh</h2>
+            <div class="row">
+                <div class="col-md-3 mb-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <i class="fas fa-bed fa-2x mb-2"></i>
+                            <h4 th:text="${totalRooms ?: 0}">0</h4>
+                            <p class="mb-0">Tổng số phòng</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <i class="fas fa-check-circle fa-2x mb-2"></i>
+                            <h4 th:text="${availableRooms ?: 0}">0</h4>
+                            <p class="mb-0">Phòng có sẵn</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                            <h4 th:text="${totalReservations ?: 0}">0</h4>
+                            <p class="mb-0">Đặt phòng hôm nay</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <i class="fas fa-users fa-2x mb-2"></i>
+                            <h4 th:text="${totalCustomers ?: 0}">0</h4>
+                            <p class="mb-0">Khách hàng</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="container mt-5">
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>Liên hệ với chúng tôi</h3>
+                    <p><i class="fas fa-map-marker-alt me-2"></i>123 Đường ABC, Quận 1, TP.HCM</p>
+                    <p><i class="fas fa-phone me-2"></i>0123 456 789</p>
+                    <p><i class="fas fa-envelope me-2"></i>info@smarthotel.com</p>
+                </div>
+                <div class="col-md-6">
+                    <h3>Giờ làm việc</h3>
+                    <p><strong>Check-in:</strong> 14:00 - 24:00</p>
+                    <p><strong>Check-out:</strong> 06:00 - 12:00</p>
+                    <p><strong>Quầy lễ tân:</strong> 24/7</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <th:block th:replace="~{base :: footer}"></th:block>
+
+        <!-- Custom JavaScript -->
+        <script>
+            // Set min date for check-in and check-out
+            const today = new Date().toISOString().split('T')[0];
+            document.querySelector('input[name="checkIn"]').min = today;
+            document.querySelector('input[name="checkOut"]').min = today;
+            
+            // Update check-out min date when check-in changes
+            document.querySelector('input[name="checkIn"]').addEventListener('change', function() {
+                document.querySelector('input[name="checkOut"]').min = this.value;
+            });
+            
+            // Show success message if exists
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success')) {
+                showAlert('Thao tác thành công!', 'success');
+            }
+            
+            // Show error message if exists
+            if (urlParams.get('error')) {
+                showAlert('Có lỗi xảy ra!', 'danger');
+            }
+            
+            function showAlert(message, type) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+                alertDiv.style.top = '20px';
+                alertDiv.style.right = '20px';
+                alertDiv.style.zIndex = '9999';
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(alertDiv);
+                
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 3000);
+            }
+
+            // Định dạng tiền cho ô giá tối đa (đồng bộ với rooms.html)
+            (function(){
+                const display = document.getElementById('priceDisplayHome');
+                const hidden = document.getElementById('maxPriceHome');
+                if(!display || !hidden) return;
+                display.addEventListener('input', function(){
+                    const raw = this.value.replace(/[^0-9]/g,'');
+                    hidden.value = raw;
+                    this.value = raw ? Number(raw).toLocaleString('vi-VN') : '';
+                });
+            })();
+        </script>
+    </body>
+</html>

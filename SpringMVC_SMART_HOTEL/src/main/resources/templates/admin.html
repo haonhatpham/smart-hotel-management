@@ -1,0 +1,90 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản trị - Smart Hotel</title>
+    <th:block th:replace="base :: bt"></th:block>
+</head>
+<body>
+<th:block th:replace="base :: menu"></th:block>
+
+<main class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h2 class="mb-0"><i class="fas fa-cog me-2"></i>Bảng điều khiển</h2>
+        <a th:href="@{/stats}" class="btn btn-outline-warning">
+            <i class="fas fa-chart-bar me-1"></i> Thống kê
+        </a>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">Tổng số phòng</div>
+                            <div class="fs-4 fw-bold" th:text="${totalRooms}">0</div>
+                        </div>
+                        <i class="fas fa-bed fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">Phòng trống</div>
+                            <div class="fs-4 fw-bold" th:text="${availableRooms}">0</div>
+                        </div>
+                        <i class="fas fa-door-open fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">Đơn đặt</div>
+                            <div class="fs-4 fw-bold" th:text="${totalReservations}">0</div>
+                        </div>
+                        <i class="fas fa-calendar-check fa-2x text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">Khách hàng</div>
+                            <div class="fs-4 fw-bold" th:text="${totalCustomers}">0</div>
+                        </div>
+                        <i class="fas fa-users fa-2x text-secondary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <div class="list-group">
+            <a th:href="@{/rooms}" class="list-group-item list-group-item-action">
+                <i class="fas fa-search me-2"></i> Tra cứu phòng
+            </a>
+            <a th:href="@{/stats}" class="list-group-item list-group-item-action">
+                <i class="fas fa-chart-line me-2"></i> Báo cáo thống kê
+            </a>
+        </div>
+    </div>
+</main>
+
+<th:block th:replace="base :: footer"></th:block>
+</body>
+</html>
+
+
