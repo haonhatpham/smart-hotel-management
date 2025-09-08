@@ -1,0 +1,60 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý phòng</title>
+    <th:block th:replace="base :: bt"></th:block>
+</head>
+<body>
+<th:block th:replace="base :: menu"></th:block>
+
+<main class="container py-4">
+    <h2 class="text-center mb-4">Quản lý phòng</h2>
+
+    <form method="post" th:action="@{/admin/rooms}" th:object="${room}" enctype="multipart/form-data" class="card p-3 shadow-sm">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label" for="roomNumber">Số phòng</label>
+                <input class="form-control" id="roomNumber" th:field="*{roomNumber}" placeholder="VD: 101">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="roomTypeId">Loại phòng</label>
+                <select class="form-select" id="roomTypeId" th:field="*{roomTypeId}">
+                    <option th:each="t: ${roomTypes}" th:value="${t.id}" th:text="${t.name}"></option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="floor">Tầng</label>
+                <input class="form-control" id="floor" type="number" th:field="*{floor}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="status">Trạng thái</label>
+                <select class="form-select" id="status" th:field="*{status}">
+                    <option value="AVAILABLE">AVAILABLE</option>
+                    <option value="OCCUPIED">OCCUPIED</option>
+                    <option value="CLEANING">CLEANING</option>
+                    <option value="MAINTENANCE">MAINTENANCE</option>
+                </select>
+            </div>
+            <div class="col-md-8">
+                <label class="form-label" for="imageUrl">Ảnh phòng (URL)</label>
+                <input class="form-control" id="imageUrl" th:field="*{imageUrl}" placeholder="https://...">
+            </div>
+            <div class="col-md-12">
+                <label class="form-label" for="note">Ghi chú</label>
+                <textarea class="form-control" id="note" rows="3" th:field="*{note}"></textarea>
+            </div>
+        </div>
+        <div class="mt-3">
+            <input type="hidden" th:field="*{id}">
+            <button class="btn btn-success" type="submit">Lưu phòng</button>
+            <a th:href="@{/admin}" class="btn btn-outline-secondary ms-2">Về trang quản trị</a>
+        </div>
+    </form>
+</main>
+
+<th:block th:replace="base :: footer"></th:block>
+</body>
+</html>
+
+

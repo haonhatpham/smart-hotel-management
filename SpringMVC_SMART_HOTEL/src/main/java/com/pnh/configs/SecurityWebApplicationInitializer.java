@@ -4,10 +4,12 @@
  */
 package com.pnh.configs;
 
+import org.springframework.security.web.context.AbstractSecurityWebApplicationInitializer;
+
 /**
  *
  * @author ADMIN
  */
-public class SecurityWebApplicationInitializer {
+public class SecurityWebApplicationInitializer extends AbstractSecurityWebApplicationInitializer{
     
 }
