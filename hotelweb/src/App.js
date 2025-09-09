@@ -1,24 +1,34 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Header from "./components/layout/Header";
+import Footer from "./components/layout/Footer";
+import Home from "./components/Home";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Container } from "react-bootstrap";
+import { MyUserContext, MyCartContext } from "./configs/MyContexts";
+import { useReducer } from "react";
+import { MyUsrReducer } from "./reducers/MyUserReducer";
+import { MyCartReducer } from "./reducers/MyCartReducer";
 
-function App() {
+const App = () => {
+  const [user, dispatch] = useReducer(MyUsrReducer, null);
+  const [cartCounter, cartDispatch] = useReducer(MyCartReducer, 0);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <MyUserContext.Provider value={[user, dispatch]}>
+      <MyCartContext.Provider value={[cartCounter, cartDispatch]}>
+        <BrowserRouter>
+          <Header />
+
+          <Container>
+            <Routes>
+              <Route path="/" element={<Home />} />
+            </Routes>
+          </Container>
+
+          <Footer />
+        </BrowserRouter>
+      </MyCartContext.Provider>
+    </MyUserContext.Provider>
   );
 }
 
