@@ -21,6 +21,7 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  *
@@ -66,6 +67,7 @@ public class RoomTypes implements Serializable {
     @Column(name = "active")
     private boolean active;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "roomTypeId")
+    @JsonIgnore
     private Set<Rooms> roomsSet;
 
     public RoomTypes() {

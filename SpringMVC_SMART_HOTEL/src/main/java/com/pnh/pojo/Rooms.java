@@ -22,6 +22,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  *
@@ -63,8 +64,10 @@ public class Rooms implements Serializable {
     @Column(name = "image_url")
     private String imageUrl;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "roomId")
+    @JsonIgnore
     private Set<ReservationRooms> reservationRoomsSet;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "roomId")
+    @JsonIgnore
     private Set<HousekeepingTasks> housekeepingTasksSet;
     @JoinColumn(name = "room_type_id", referencedColumnName = "id")
     @ManyToOne(optional = false)

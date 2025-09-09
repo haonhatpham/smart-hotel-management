@@ -38,12 +38,8 @@ public class RoomRepositoryImpl implements RoomRepository {
     @Autowired
     private LocalSessionFactoryBean factory;
 
-    private static final int PAGE_SIZE = 8;
+    private static final int PAGE_SIZE = 6;
 
-    /**
-     * Lấy danh sách phòng với các bộ lọc
-     * Có thể tìm phòng trống nếu có checkIn và checkOut
-     */
     @Override
     public List<Rooms> getRooms(Map<String, String> params) {
         Session s = this.factory.getObject().getCurrentSession();
