@@ -6,6 +6,7 @@ import { MyCartContext,MyUserContext } from "../../configs/MyContexts";
 
 const Header = () => {
     const [roomTypes, setRoomTypes] = useState([]);
+    const [services, setServices] = useState([]);
     const [user, dispatch] = useContext(MyUserContext);
     const [cartCounter, ] = useContext(MyCartContext);
 
@@ -14,12 +15,20 @@ const Header = () => {
             let res = await Apis.get(endpoints['room-types']);
             setRoomTypes(res.data || []);
         } catch (error) {
-            // Ignore error, just use empty array
+        }
+    };
+
+    const loadServices = async () => {
+        try {
+            let res = await Apis.get(endpoints['services']);
+            setServices(res.data || []);
+        } catch (error) {
         }
     };
 
     useEffect(() => {
         loadRoomTypes();
+        loadServices();
     }, []);
 
     return (
@@ -36,18 +45,15 @@ const Header = () => {
                         <Link className="nav-link" to="/">Trang chủ</Link>
                       
                         <NavDropdown title="Loại phòng" id="room-types-dropdown">
-                            {roomTypes.map(roomType => (
-                                <Link 
-                                    key={roomType.id}
-                                    to={`/?typeId=${roomType.id}`} 
-                                    className="dropdown-item"
-                                >
-                                    {roomType.name}
-                                </Link>
-                            ))}
+                            {roomTypes.map(roomType => (<Link key={roomType.id} to={`/?typeId=${roomType.id}`} className="dropdown-item">
+                            {roomType.name} </Link>))}
                         </NavDropdown>
 
-                        <Link className="nav-link" to="/services">Dịch vụ</Link>
+                        <NavDropdown title="Dịch vụ" id="services-dropdown">
+                            {services.map(service => (<Link key={service.id} to={`/services/${service.id}`} className="dropdown-item" >
+                                    {service.name} </Link>))}
+                        </NavDropdown>
+                        
                         <Link className="nav-link" to="/about">Về chúng tôi</Link>
                         <Link className="nav-link" to="/contact">Liên hệ</Link>
                         {user===null?<>
@@ -60,6 +66,16 @@ const Header = () => {
                         
                         <Link className="nav-link text-success" to="/cart">Giỏ hàng <Badge variant="danger" className="bg-danger">{cartCounter}</Badge></Link>
                       
+                        
+                        <Button 
+                            as={Link}
+                            to="/booking"
+                            variant="success" 
+                            className="ms-2"
+                        >
+                            <i className="fas fa-calendar-check me-2"></i>
+                            ĐẶT PHÒNG
+                        </Button>
                         
                     </Nav>
                     </Navbar.Collapse>

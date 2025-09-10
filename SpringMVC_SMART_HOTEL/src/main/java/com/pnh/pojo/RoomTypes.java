@@ -4,6 +4,7 @@
  */
 package com.pnh.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -21,7 +22,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Set;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  *
@@ -66,8 +66,8 @@ public class RoomTypes implements Serializable {
     @NotNull
     @Column(name = "active")
     private boolean active;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "roomTypeId")
     @JsonIgnore
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "roomTypeId")
     private Set<Rooms> roomsSet;
 
     public RoomTypes() {

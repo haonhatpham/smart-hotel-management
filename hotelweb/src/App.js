@@ -2,12 +2,15 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import Home from "./components/Home";
+import Booking from "./components/Booking";
+import Checkout from "./components/Checkout";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Container } from "react-bootstrap";
 import { MyUserContext, MyCartContext } from "./configs/MyContexts";
-import { useEffect, useReducer } from "react";
+import { useReducer, useState } from "react";
 import { MyUsrReducer } from "./reducers/MyUserReducer";
 import { MyCartReducer } from "./reducers/MyCartReducer";
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import Login from "./components/Login";
 import Register from "./components/Register";
 import cookie from 'react-cookies'
@@ -43,6 +46,8 @@ const App = () => {
           <Container>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/booking" element={<Booking />} />
+              <Route path="/checkout" element={<Checkout />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </Routes>

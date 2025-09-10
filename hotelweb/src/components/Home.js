@@ -9,12 +9,9 @@ const Home = () => {
     const [rooms, setRooms] = useState([]);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
-    const [hasMore, setHasMore] = useState(true); // Thêm state để track có còn phòng không
+    const [hasMore, setHasMore] = useState(true); 
     const [q] = useSearchParams();
     const [, cartDispatch] = useContext(MyCartContext);
-
-    console.log("=== HOME COMPONENT RENDER ===");
-    console.log("State - page:", page, "loading:", loading, "rooms:", rooms.length, "hasMore:", hasMore);
 
     const loadRooms = async () => {
         try {
@@ -24,71 +21,40 @@ const Home = () => {
             let typeId = q.get("typeId");
             if (typeId) 
                 url = `${url}&roomTypeId=${typeId}`;
-
-            console.log("=== DEBUG API CALL ===");
-            console.log("URL gọi API:", url);
-            console.log("Full URL:", `http://localhost:8080/SpringMVC_SMART_HOTEL${url}`);
-            
+          
             let res = await Apis.get(url);
-            
-            console.log("=== RESPONSE ===");
-            console.log("Status:", res.status);
-            console.log("Response data:", res.data);
-            console.log("Data type:", typeof res.data);
-            console.log("Data length:", res.data?.length);
-            console.log("First room:", res.data?.[0]);
             
             if (res.data && res.data.length > 0) {
                 if (page === 1) {
                     setRooms(res.data);
-                    console.log("✅ Set rooms (page 1):", res.data.length, "phòng");
                 } else {
                     setRooms([...rooms, ...res.data]);
-                    console.log("✅ Add more rooms:", res.data.length, "phòng");
                 }
                 
-                // Kiểm tra nếu số phòng trả về < PAGE_SIZE thì hết phòng
-                console.log("Checking hasMore: received", res.data.length, "rooms, PAGE_SIZE = 6");
-                if (res.data.length < 6) { // PAGE_SIZE = 6 từ backend
+                if (res.data.length < 6) { 
                     setHasMore(false);
-                    console.log("📝 Hết phòng - ẩn nút 'Xem thêm' vì", res.data.length, "< 6");
                 } else {
                     setHasMore(true);
-                    console.log("📝 Còn phòng - hiện nút 'Xem thêm' vì", res.data.length, "= 6");
                 }
             } else {
                 setHasMore(false);
-                console.log("❌ Không có phòng nào - ẩn nút 'Xem thêm'");
             }
         } catch (ex) {
-            console.error("=== ERROR ===");
-            console.error("Error message:", ex.message);
-            console.error("Error response:", ex.response?.data);
-            console.error("Error status:", ex.response?.status);
             console.error("Full error:", ex);
         } finally {
             setLoading(false);
-            console.log("=== LOADING FINISHED ===");
         }
     }
 
-    useEffect(() => {
-        console.log("=== useEffect [page, q] ===");
-        console.log("page:", page);
-        console.log("q:", q);
-        console.log("page > 0?", page > 0);
-        
+    useEffect(() => {        
         if (page > 0) {
-            console.log("✅ Gọi loadRooms()");
             loadRooms();
-        } else {
-            console.log("❌ Không gọi loadRooms vì page <= 0");
         }
     }, [page, q]);
 
     useEffect(() => {
         setPage(1);
-        setHasMore(true); // Reset hasMore khi filter thay đổi
+        setHasMore(true);
     }, [q]);
 
     const loadMore = () => {
@@ -96,24 +62,21 @@ const Home = () => {
     }
 
     const addToCart = (room) => {
-        let cart = cookie.load('cart') || null;
-        if (cart === null)
-            cart = {}
+        let cart = cookie.load('cart') || {};
 
         if (room.id in cart) {
-            cart[room.id]["quantity"]++;
+            cart[room.id]["puantity"]++;
         } else {
             cart[room.id] = {
                 "id": room.id,
                 "roomNumber": room.roomNumber,
                 "roomType": room.roomTypeId?.name,
                 "price": room.roomTypeId?.price,
-                "quantity": 1
+                "puantity": 1
             }
         }
 
         cookie.save('cart', cart);
-        console.info(cart);
         cartDispatch({
             "type": "inc"
         });
@@ -122,14 +85,19 @@ const Home = () => {
     return (
         <>
             <div className="hero-section text-center py-5 mb-4" style={{
-                background: 'linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80")',
+                background: 'linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&p=80")',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 color: 'white'
             }}>
                 <h1 className="display-4 fw-bold">Smart Hotel Management</h1>
                 <p className="lead">Trải nghiệm lưu trú tuyệt vời với dịch vụ chất lượng cao</p>
-                <Button as={Link} to="/rooms/search" variant="primary" size="lg">
+                <Button 
+                    as={Link}
+                    to="/booking"
+                    variant="primary" 
+                    size="lg"
+                >
                     Đặt phòng ngay
                 </Button>
             </div>
@@ -144,7 +112,7 @@ const Home = () => {
                         <Card className="h-100 shadow-sm">
                             <Card.Img 
                                 variant="top" 
-                                src={room.imageUrl || "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"} 
+                                src={room.imageUrl || "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&p=80"} 
                                 style={{height: '200px', objectFit: 'cover'}}
                             />
                             <Card.Body className="d-flex flex-column">
