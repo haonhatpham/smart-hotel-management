@@ -4,6 +4,7 @@
  */
 package com.pnh.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -60,6 +61,7 @@ public class Services implements Serializable {
     @NotNull
     @Column(name = "active")
     private boolean active;
+    @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "serviceId")
     private Set<ServiceOrders> serviceOrdersSet;
 

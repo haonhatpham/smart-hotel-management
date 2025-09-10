@@ -20,27 +20,27 @@ const Footer = () => {
                     </Col>
                     
                     <Col md={4}>
-                        <h6 className="mb-3">Liên kết nhanh</h6>
+                        <h6 className="mb-3 text-light">Liên kết nhanh</h6>
                         <ul className="list-unstyled">
-                            <li><Link to="/" className="text-muted text-decoration-none">Trang chủ</Link></li>
-                            <li><Link to="/rooms" className="text-muted text-decoration-none">Phòng</Link></li>
-                            <li><Link to="/services" className="text-muted text-decoration-none">Dịch vụ</Link></li>
-                            <li><Link to="/about" className="text-muted text-decoration-none">Về chúng tôi</Link></li>
-                            <li><Link to="/contact" className="text-muted text-decoration-none">Liên hệ</Link></li>
+                            <li><Link to="/" className="text-light text-decoration-none">Trang chủ</Link></li>
+                            <li><Link to="/rooms" className="text-light text-decoration-none">Phòng</Link></li>
+                            <li><Link to="/services" className="text-light text-decoration-none">Dịch vụ</Link></li>
+                            <li><Link to="/about" className="text-light text-decoration-none">Về chúng tôi</Link></li>
+                            <li><Link to="/contact" className="text-light text-decoration-none">Liên hệ</Link></li>
                         </ul>
                     </Col>
                     
                     <Col md={4}>
-                        <h6 className="mb-3">Liên hệ</h6>
-                        <p className="text-muted mb-1">
+                        <h6 className="mb-3 text-light">Liên hệ</h6>
+                        <p className="text-light mb-1">
                             <i className="fas fa-map-marker-alt me-2"></i>
                             123 Đường ABC, Quận 1, TP.HCM
                         </p>
-                        <p className="text-muted mb-1">
+                        <p className="text-light mb-1">
                             <i className="fas fa-phone me-2"></i>
                             (+84) 123 456 789
                         </p>
-                        <p className="text-muted mb-1">
+                        <p className="text-light mb-1">
                             <i className="fas fa-envelope me-2"></i>
                             info@smarthotel.com
                         </p>
@@ -51,7 +51,7 @@ const Footer = () => {
                 
                 <Row>
                     <Col className="text-center">
-                        <p className="text-muted mb-0">
+                        <p className="text-light mb-0">
                             &copy; {currentYear} Smart Hotel Management. Tất cả quyền được bảo lưu.
                         </p>
                     </Col>

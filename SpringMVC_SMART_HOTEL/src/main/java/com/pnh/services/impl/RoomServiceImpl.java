@@ -25,6 +25,10 @@ public class RoomServiceImpl implements RoomService {
     
     @Override
     public List<Rooms> getRooms(Map<String, String> params) {
+        if (params == null || params.isEmpty()) {
+            params = new java.util.HashMap<>();
+            params.put("status", "AVAILABLE");
+        }
         return this.roomRepository.getRooms(params);
     }
     
