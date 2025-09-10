@@ -22,6 +22,7 @@ import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import com.pnh.filters.JwtFilter;
 
 /**
  *
@@ -58,6 +59,9 @@ public class SpringSecurityConfigs {
                 -> requests
                         .requestMatchers("/login", "/logout", "/css/**", "/js/**", "/images/**", "/api/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/reception/**").hasRole("RECEPTION")
+                        .requestMatchers("/housekeeping/**").hasRole("HOUSEKEEPING")
+                        .requestMatchers("/accounting/**").hasRole("ACCOUNTANT")
                         .anyRequest().authenticated())
                 .formLogin(form -> form.loginPage("/login")
                 .loginProcessingUrl("/login")

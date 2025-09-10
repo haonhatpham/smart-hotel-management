@@ -161,7 +161,7 @@ public class RoomRepositoryImpl implements RoomRepository {
     @Override
     public Rooms getRoomByNumber(String roomNumber) {
         Session s = this.factory.getObject().getCurrentSession();
-        return s.createQuery("FROM com.pnh.pojo.Rooms r WHERE r.roomNumber = :rn", Rooms.class)
+        return s.createQuery("FROM Rooms r WHERE r.roomNumber = :rn", Rooms.class)
                 .setParameter("rn", roomNumber)
                 .setMaxResults(1)
                 .uniqueResult();
