@@ -5,14 +5,35 @@ import Home from "./components/Home";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Container } from "react-bootstrap";
 import { MyUserContext, MyCartContext } from "./configs/MyContexts";
-import { useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import { MyUsrReducer } from "./reducers/MyUserReducer";
 import { MyCartReducer } from "./reducers/MyCartReducer";
+import Login from "./components/Login";
+import Register from "./components/Register";
+import cookie from 'react-cookies'
+import { authApis, endpoints } from "./configs/Api";
+
 
 const App = () => {
   const [user, dispatch] = useReducer(MyUsrReducer, null);
   const [cartCounter, cartDispatch] = useReducer(MyCartReducer, 0);
+  const getUserFromToken = async () => {
+  const token = cookie.load("token");
 
+    if (token) {
+      try {
+        let user = await authApis().get(endpoints["profile"]);
+        console.info(user.data);
+        dispatch({ type: "login", payload: user.data });
+      } catch (error) {
+        console.error("Failed to fetch user profile with stored token:", error);
+        dispatch({ type: "logout" });
+      }
+    }
+  };
+  useEffect(() => {
+    getUserFromToken();
+  }, []);
   return (
     <MyUserContext.Provider value={[user, dispatch]}>
       <MyCartContext.Provider value={[cartCounter, cartDispatch]}>
@@ -22,6 +43,8 @@ const App = () => {
           <Container>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
             </Routes>
           </Container>
 
