@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react";
-import { Container, Nav, Navbar, NavDropdown, Button } from "react-bootstrap";
+import { useContext, useEffect, useState } from "react";
+import { Badge, Button, Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import Apis, { endpoints } from "../../configs/Api";
+import { MyCartContext,MyUserContext } from "../../configs/MyContexts";
 
 const Header = () => {
     const [roomTypes, setRoomTypes] = useState([]);
     const [services, setServices] = useState([]);
+    const [user, dispatch] = useContext(MyUserContext);
+    const [cartCounter, ] = useContext(MyCartContext);
 
     const loadRoomTypes = async () => {
         try {
@@ -53,9 +56,16 @@ const Header = () => {
                         
                         <Link className="nav-link" to="/about">Về chúng tôi</Link>
                         <Link className="nav-link" to="/contact">Liên hệ</Link>
-
-                        <Link className="nav-link text-success" to="/register">Đăng ký</Link>
-                        <Link className="nav-link text-danger" to="/login">Đăng nhập</Link>
+                        {user===null?<>
+                            <Link className="nav-link text-success" to="/register">Đăng ký</Link>
+                            <Link className="nav-link text-danger" to="/login">Đăng nhập</Link>
+                        </>:<>
+                            <Link className="nav-link text-success" to="/">Chào {user.username}</Link>
+                            <Button variant="danger"onClick={() => dispatch({"type": "logout"})}>Đăng xuất</Button>
+                        </>}
+                        
+                        <Link className="nav-link text-success" to="/cart">Giỏ hàng <Badge variant="danger" className="bg-danger">{cartCounter}</Badge></Link>
+                      
                         
                         <Button 
                             as={Link}

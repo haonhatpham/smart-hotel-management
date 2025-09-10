@@ -4,6 +4,7 @@
  */
 package com.pnh.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -87,11 +88,15 @@ public class Users implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
     @OneToMany(mappedBy = "assigneeId")
+    @JsonIgnore
     private Set<HousekeepingTasks> housekeepingTasksSet;
     @OneToMany(mappedBy = "createdBy")
+    @JsonIgnore
     private Set<Reservations> reservationsSet;
+    @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "customerId")
     private Set<Reservations> reservationsSet1;
+    @JsonIgnore
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "userId")
     private CustomerProfiles customerProfiles;
 

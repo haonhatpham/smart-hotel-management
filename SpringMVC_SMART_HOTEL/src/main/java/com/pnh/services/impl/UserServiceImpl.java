@@ -69,12 +69,12 @@ public class UserServiceImpl implements UserService {
         u.setPhone(params.get("phone"));
         u.setUsername(params.get("username"));
         u.setPassword(this.passwordEncoder.encode(params.get("password")));
-        u.setRole("USER");
+        u.setRole("CUSTOMER");
         u.setEnabled(true);
         u.setCreatedAt(new Date());
 
         // Lưu ý: Users entity không có field avatar, nên bỏ phần upload avatar
-        // Nếu cần avatar, có thể lưu vào CustomerProfiles hoặc tạo field mới
+        // Nếu cần avatar, có thể lưu vào a hoặc tạo field mới
 
         return this.userRepo.addUser(u);
     }

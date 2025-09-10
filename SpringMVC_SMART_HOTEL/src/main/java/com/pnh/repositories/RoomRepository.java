@@ -19,7 +19,6 @@ public interface RoomRepository {
     
     List<Rooms> getRooms(Map<String, String> params);
 
-
     Rooms getRoomById(Long id);
 
     Rooms getRoomByNumber(String roomNumber);
