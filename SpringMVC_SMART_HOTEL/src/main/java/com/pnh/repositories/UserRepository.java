@@ -5,6 +5,7 @@
 package com.pnh.repositories;
 
 import com.pnh.pojo.Users;
+import com.pnh.pojo.CustomerProfiles;
 import java.util.List;
 import java.util.Map;
 
@@ -18,4 +19,6 @@ public interface UserRepository {
 
     Users addUser(Users u);
     boolean authenticate(String username, String password);
+
+    CustomerProfiles getCustomerProfileByUsername(String username);
 }

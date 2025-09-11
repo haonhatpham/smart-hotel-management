@@ -5,6 +5,7 @@
 package com.pnh.repositories.impl;
 
 import com.pnh.pojo.Users;
+import com.pnh.pojo.CustomerProfiles;
 import com.pnh.repositories.UserRepository;
 import java.util.List;
 import org.hibernate.Session;
@@ -61,5 +62,13 @@ public class UserRepositoryImpl implements UserRepository {
         boolean ok = this.passwordEncoder.matches(password, storedHash);
         System.out.println("[AUTH DEBUG] repo: BCrypt.matches => " + ok);
         return ok;
+    }
+
+    @Override
+    public CustomerProfiles getCustomerProfileByUsername(String username) {
+        Session s = this.factory.getObject().getCurrentSession();
+        Query q = s.createQuery("SELECT u.customerProfiles FROM Users u WHERE u.username = :username", CustomerProfiles.class);
+        q.setParameter("username", username);
+        return (CustomerProfiles) q.uniqueResult();
     }
 }

@@ -149,19 +149,16 @@ public class ReservationRepositoryImpl implements ReservationRepository {
 
         var query = s.createQuery(q);
 
+        // Phân trang
         if (params != null) {
-            int size = DEFAULT_PAGE_SIZE;
-            int page = 1;
-            try {
-                String sizeStr = params.get("size");
-                if (sizeStr != null && !sizeStr.isEmpty()) size = Integer.parseInt(sizeStr);
-                String pageStr = params.get("page");
-                if (pageStr != null && !pageStr.isEmpty()) page = Integer.parseInt(pageStr);
-            } catch (NumberFormatException ignore) {}
-            if (size <= 0) size = DEFAULT_PAGE_SIZE;
-            if (page <= 0) page = 1;
-            int start = (page - 1) * size;
-            query.setFirstResult(start).setMaxResults(size);
+            String p = params.get("page");
+            if (p != null && !p.isEmpty()) {
+                int page = Integer.parseInt(p);
+                int start = (page - 1) * DEFAULT_PAGE_SIZE;
+
+                query.setMaxResults(DEFAULT_PAGE_SIZE);
+                query.setFirstResult(start);
+            }
         }
 
         return query.getResultList();

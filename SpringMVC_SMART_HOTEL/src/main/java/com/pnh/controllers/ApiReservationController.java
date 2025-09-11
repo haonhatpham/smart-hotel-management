@@ -3,7 +3,6 @@ package com.pnh.controllers;
 import com.pnh.pojo.Reservations;
 import com.pnh.services.ReservationService;
 import java.security.Principal;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,26 +31,8 @@ public class ApiReservationController {
 	private ReservationService reservationService;
 
 	@GetMapping("/reservations")
-	public ResponseEntity<Map<String, Object>> list(
-			Principal principal,
-			@RequestParam(name = "page", required = false, defaultValue = "1") int page,
-			@RequestParam(name = "size", required = false, defaultValue = "6") int size,
-			@RequestParam(name = "status", required = false) String status
-	) {
-		// Ở đây bạn có thể map username -> userId qua UserService nếu cần
-		// Tạm thời giả định client gửi kèm customerId trong header/param khác nếu chưa có Principal
-		Map<String, String> params = new HashMap<>();
-		// params.put("customerId", currentUserId.toString()); // cần bổ sung khi có user hiện hành
-		params.put("page", String.valueOf(page));
-		params.put("size", String.valueOf(size));
-		if (status != null && !status.isEmpty()) params.put("status", status);
-
-		List<Reservations> items = this.reservationService.getReservations(params);
-		Map<String, Object> body = new HashMap<>();
-		body.put("items", items);
-		body.put("page", page);
-		body.put("size", size);
-		return new ResponseEntity<>(body, HttpStatus.OK);
+	public ResponseEntity<List<Reservations>> list(@RequestParam Map<String, String> params) {
+		return new ResponseEntity<>(this.reservationService.getReservations(params), HttpStatus.OK);
 	}
 
 	@GetMapping("/reservations/{id}")
