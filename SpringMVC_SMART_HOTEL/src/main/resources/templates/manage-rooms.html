@@ -11,15 +11,21 @@
 <main class="container py-4">
     <h2 class="text-center mb-4">Quản lý phòng</h2>
 
-    <form method="post" th:action="@{/admin/rooms}" th:object="${room}" enctype="multipart/form-data" class="card p-3 shadow-sm">
+    <!-- Hiển thị thông báo lỗi -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Lỗi!</strong> <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <form method="post" th:action="@{/manage/add}" th:object="${room}" enctype="multipart/form-data" class="card p-3 shadow-sm">
         <div class="row g-3">
             <div class="col-md-3">
                 <label class="form-label" for="roomNumber">Số phòng</label>
-                <input class="form-control" id="roomNumber" th:field="*{roomNumber}" placeholder="VD: 101">
+                <input type="text" class="form-control" id="roomNumber" th:field="*{roomNumber}" placeholder="VD: 101">
             </div>
             <div class="col-md-3">
-                <label class="form-label" for="roomTypeId">Loại phòng</label>
-                <select class="form-select" id="roomTypeId" th:field="*{roomTypeId}">
+                <label class="form-label" for="roomType">Loại phòng</label>
+                <select class="form-select" th:field="*{roomTypeId}" id="roomType">
                     <option th:each="t: ${roomTypes}" th:value="${t.id}" th:text="${t.name}"></option>
                 </select>
             </div>
@@ -37,8 +43,10 @@
                 </select>
             </div>
             <div class="col-md-8">
-                <label class="form-label" for="imageUrl">Ảnh phòng (URL)</label>
-                <input class="form-control" id="imageUrl" th:field="*{imageUrl}" placeholder="https://...">
+                <label class="form-label" for="imageUrl">Ảnh phòng: </label>
+                <input type="file" class="form-control" id="imageUrl" th:field="*{file}">
+                <img th:if="${room.imageUrl != null}" th:src="${room.imageUrl}" width="200" class="mt-2"/>
+                
             </div>
             <div class="col-md-12">
                 <label class="form-label" for="note">Ghi chú</label>
@@ -47,8 +55,9 @@
         </div>
         <div class="mt-3">
             <input type="hidden" th:field="*{id}">
+            <input type="hidden" th:field="*{imageUrl}">
             <button class="btn btn-success" type="submit">Lưu phòng</button>
-            <a th:href="@{/admin}" class="btn btn-outline-secondary ms-2">Về trang quản trị</a>
+            <a th:href="@{/manage}" class="btn btn-outline-secondary ms-2">Về trang quản trị</a>
         </div>
     </form>
 </main>

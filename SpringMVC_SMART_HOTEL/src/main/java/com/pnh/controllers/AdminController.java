@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class AdminController {
@@ -23,40 +22,49 @@ public class AdminController {
     @Autowired
     private RoomService roomService;
 
-    @GetMapping("/admin")
-    public String adminRoomsTable(Model model) {
-        model.addAttribute("rooms", this.roomService.getRooms(java.util.Collections.emptyMap()));
-        return "admin-rooms-table";
+    @GetMapping("/manage")
+    public String manageRooms(Model model) {
+        java.util.Map<String, String> params = new java.util.HashMap<>();
+        params.put("userRole", "ADMIN");
+        model.addAttribute("rooms", this.roomService.getRooms(params));
+        return "manage";
     }
 
-    @GetMapping("/admin/rooms")
-    public String manageRooms(Model model) {
+    @GetMapping("/manage/add")
+    public String addView(Model model) {
         model.addAttribute("room", new Rooms());
         model.addAttribute("roomTypes", this.roomTypeService.getRoomTypes());
-        return "admin-rooms";
+        return "manage-rooms";
     }
-
-    @PostMapping("/admin/rooms")
-    public String saveRoom(@ModelAttribute Rooms room) {
-        // TODO: save via service once wired in
-        return "redirect:/admin";
+    
+    @PostMapping("/manage/add")
+    public String add(@ModelAttribute(value = "room") Rooms room, Model model) {
+        try {
+            this.roomService.addOrUpdate(room);
+            return "redirect:/manage";
+        } catch (RuntimeException e) {
+            // Hiển thị thông báo lỗi và quay lại form
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("roomTypes", this.roomTypeService.getRoomTypes());
+            return "manage-rooms";
+        }
     }
-
-    @GetMapping("/admin/rooms/{id}/edit")
-    public String editRoom(@PathVariable("id") Long id, Model model) {
+    
+    @GetMapping("manage/rooms/{roomId}")
+    public String updateView(Model model, @PathVariable(value = "roomId") Long id) {
         Rooms room = this.roomService.getRoomById(id);
         if (room == null) {
-            return "redirect:/admin";
+            return "redirect:/manage";
         }
         model.addAttribute("room", room);
         model.addAttribute("roomTypes", this.roomTypeService.getRoomTypes());
-        return "admin-rooms";
+        return "manage-rooms";
     }
-
-    @PostMapping("/admin/rooms/{id}/delete")
-    public String deleteRoom(@PathVariable("id") Long id, @RequestParam(name="confirm", required=false) String confirm) {
-        // TODO: delete via service once wired in
-        return "redirect:/admin";
+    
+    @PostMapping("manage/rooms/{roomId}/delete")
+    public String deleteRoom(@PathVariable(value = "roomId") Long id) {
+        this.roomService.deleteRoom(id);
+        return "redirect:/manage";
     }
 }
 

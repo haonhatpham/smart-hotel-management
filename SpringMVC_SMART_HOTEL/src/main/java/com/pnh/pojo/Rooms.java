@@ -23,6 +23,8 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Transient;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  *
@@ -72,6 +74,9 @@ public class Rooms implements Serializable {
     @JoinColumn(name = "room_type_id", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private RoomTypes roomTypeId;
+
+    @Transient
+    private MultipartFile file;
 
     public Rooms() {
     }
@@ -182,5 +187,19 @@ public class Rooms implements Serializable {
     public String toString() {
         return "com.pnh.pojo.Rooms[ id=" + id + " ]";
     }
-    
+
+    /**
+     * @return the file
+     */
+    public MultipartFile getFile() {
+        return file;
+    }
+
+    /**
+     * @param file the file to set
+     */
+    public void setFile(MultipartFile file) {
+        this.file = file;
+    }
+
 }
