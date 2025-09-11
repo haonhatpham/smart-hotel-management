@@ -6,7 +6,6 @@ package com.pnh.services.impl;
 
 import com.pnh.pojo.Services;
 import com.pnh.repositories.ServiceRepository;
-import com.pnh.repositories.StatsRepository;
 import com.pnh.services.ServiceService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,5 +24,20 @@ public class ServiceServiceImpl implements ServiceService {
     @Override
     public List<Services> getServices() {
         return this.serviceRepo.getServices();
+    }
+
+    @Override
+    public Services getById(Long id) {
+        return this.serviceRepo.getById(id);
+    }
+
+    @Override
+    public Services addOrUpdate(Services s) {
+        return this.serviceRepo.addOrUpdate(s);
+    }
+
+    @Override
+    public void delete(Long id) {
+        this.serviceRepo.delete(id);
     }
 }

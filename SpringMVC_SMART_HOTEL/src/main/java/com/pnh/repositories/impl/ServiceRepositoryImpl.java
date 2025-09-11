@@ -4,7 +4,6 @@
  */
 package com.pnh.repositories.impl;
 
-import com.pnh.pojo.RoomTypes;
 import com.pnh.pojo.Services;
 import com.pnh.repositories.ServiceRepository;
 import java.util.List;
@@ -31,5 +30,28 @@ public class ServiceRepositoryImpl implements ServiceRepository {
         Session s = this.factory.getObject().getCurrentSession();
         Query q = s.createQuery("FROM Services", Services.class);
         return q.getResultList();
+    }
+
+    @Override
+    public Services getById(Long id) {
+        Session s = this.factory.getObject().getCurrentSession();
+        return s.find(Services.class, id);
+    }
+
+    @Override
+    public Services addOrUpdate(Services svc) {
+        Session s = this.factory.getObject().getCurrentSession();
+        if (svc.getId() == null) {
+            s.persist(svc);
+            return svc;
+        }
+        return (Services) s.merge(svc);
+    }
+
+    @Override
+    public void delete(Long id) {
+        Session s = this.factory.getObject().getCurrentSession();
+        Services sv = this.getById(id);
+        if (sv != null) s.remove(sv);
     }
 }

@@ -3,6 +3,8 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.pnh.controllers;
+
+import com.pnh.pojo.CustomerProfiles;
 import com.pnh.pojo.Users;
 import com.pnh.services.UserService;
 import java.util.Collections;
@@ -21,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import com.pnh.utils.JwtUtils;
 import java.security.Principal;
+import org.springframework.web.bind.annotation.GetMapping;
+
 /**
  *
  * @author User
@@ -29,16 +33,17 @@ import java.security.Principal;
 @RequestMapping("/api")
 @CrossOrigin
 public class ApiUserController {
+
     @Autowired
     private UserService userDetailsService;
-    
-    @PostMapping(path = "/users", 
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE, 
+
+    @PostMapping(path = "/users",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Users> create(@RequestParam Map<String, String> params, @RequestParam(value = "avatar") MultipartFile avatar) {
         return new ResponseEntity<>(this.userDetailsService.addUser(params, avatar), HttpStatus.CREATED);
     }
-    
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Users u) {
         try {
@@ -54,10 +59,20 @@ public class ApiUserController {
         }
     }
 
-    @RequestMapping("/secure/profile")  
+    @RequestMapping("/secure/profile")
     @ResponseBody
     @CrossOrigin
     public ResponseEntity<Users> getProfile(Principal principal) {
-        return new ResponseEntity<>(this.userDetailsService.getUserByUsername   (principal.getName()), HttpStatus.OK);
+        return new ResponseEntity<>(this.userDetailsService.getUserByUsername(principal.getName()), HttpStatus.OK);
+    }
+
+    @GetMapping("/secure/customer-profile")
+    @ResponseBody
+    public ResponseEntity<CustomerProfiles> getCustomerProfile(Principal principal) {
+        CustomerProfiles profile = this.userDetailsService.getCustomerProfile(principal.getName());
+        if (profile == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(profile);
     }
 }

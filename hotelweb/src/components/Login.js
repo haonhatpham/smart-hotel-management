@@ -17,7 +17,7 @@ const Login = () => {
         type: "password"
     }];
 
-    const [user, setUser] = useState();
+    const [user, setUser] = useState({ username: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState();
     const nav = useNavigate();
@@ -51,6 +51,21 @@ const Login = () => {
                 "type": "login",
                 "payload": u.data
             });
+
+            try {
+                const guestCart = cookie.load('cart_guest');
+                if (guestCart) {
+                    const userCartKey = `cart_${u.data.id}`;
+                    cookie.save(userCartKey, guestCart);
+                    cookie.remove('cart_guest');
+                }
+                const legacyCart = cookie.load('cart');
+                if (legacyCart) {
+                    const userCartKey = `cart_${u.data.id}`;
+                    cookie.save(userCartKey, legacyCart);
+                    cookie.remove('cart');
+                }
+            } catch (e) {}
 
             let next = q.get('next')
             nav(next === null?"/":next);

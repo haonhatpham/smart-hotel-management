@@ -1,0 +1,39 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm/Cập nhật dịch vụ</title>
+    <th:block th:replace="base :: bt"></th:block>
+</head>
+<body>
+<th:block th:replace="base :: menu"></th:block>
+<main class="container py-4">
+    <h2 class="text-center mb-4" th:text="${service.id != null ? 'Cập nhật dịch vụ' : 'Thêm dịch vụ'}">Dịch vụ</h2>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <form method="post" th:action="@{/manage/services/add}" th:object="${service}" class="card p-3 shadow-sm">
+        <input type="hidden" th:field="*{id}">
+        <div class="mb-3">
+            <label class="form-label">Tên</label>
+            <input class="form-control" th:field="*{name}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Giá (VND)</label>
+            <input class="form-control" type="number" th:field="*{price}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Mô tả</label>
+            <textarea class="form-control" rows="3" th:field="*{description}"></textarea>
+        </div>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" th:field="*{active}" id="activeCheck">
+            <label class="form-check-label" for="activeCheck">Hoạt động</label>
+        </div>
+        <div>
+            <button class="btn btn-success" type="submit">Lưu</button>
+            <a th:href="@{/manage/services}" class="btn btn-outline-secondary ms-2">Về danh sách</a>
+        </div>
+    </form>
+</main>
+<th:block th:replace="base :: footer"></th:block>
+</body>
+</html>
