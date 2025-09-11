@@ -1,0 +1,51 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý loại phòng</title>
+    <th:block th:replace="base :: bt"></th:block>
+</head>
+<body>
+<th:block th:replace="base :: menu"></th:block>
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">Loại phòng</h3>
+        <a th:href="@{/manage/room-types/add}" class="btn btn-success">
+            <i class="fas fa-plus me-1"></i> Thêm loại phòng
+        </a>
+    </div>
+
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Tên</th>
+                    <th>Sức chứa</th>
+                    <th>Giá (VND)</th>
+                    <th class="text-end">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="t : ${roomTypes}">
+                    <td th:text="${t.id}">1</td>
+                    <td th:text="${t.name}">Standard</td>
+                    <td th:text="${t.capacity}">2</td>
+                    <td th:text="${#numbers.formatDecimal(t.price, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td class="text-end">
+                        <a th:href="@{'/manage/room-types/' + ${t.id}}" class="btn btn-sm btn-info">Sửa</a>
+                        <form th:action="@{'/manage/room-types/' + ${t.id} + '/delete'}" method="post" class="d-inline" onsubmit="return confirm('Xóa loại phòng này?');">
+                            <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(roomTypes)}">
+                    <td colspan="5" class="text-center text-muted">Chưa có loại phòng</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+<th:block th:replace="base :: footer"></th:block>
+</body>
+</html>

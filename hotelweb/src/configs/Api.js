@@ -10,6 +10,7 @@ export const endpoints = {
     'register': '/users',
     'login': '/login',
     'profile': '/secure/profile',
+    'customer-profile': '/secure/customer-profile',
 };
 
 export const authApis = () => {

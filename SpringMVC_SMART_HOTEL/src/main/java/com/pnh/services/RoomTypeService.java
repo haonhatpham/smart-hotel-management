@@ -13,4 +13,7 @@ import java.util.List;
  */
 public interface RoomTypeService {
     List<RoomTypes> getRoomTypes();
+    RoomTypes getById(Long id);
+    RoomTypes addOrUpdate(RoomTypes rt);
+    void delete(Long id);
 }

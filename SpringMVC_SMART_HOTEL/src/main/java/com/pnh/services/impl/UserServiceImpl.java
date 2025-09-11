@@ -6,6 +6,7 @@ package com.pnh.services.impl;
 
 
 import com.pnh.pojo.Users;
+import com.pnh.pojo.CustomerProfiles;
 import com.pnh.repositories.UserRepository;
 import com.pnh.services.UserService;
 import java.io.IOException;
@@ -82,5 +83,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean authenticate(String username, String password) {
         return this.userRepo.authenticate(username, password);
+    }
+
+    @Override
+    public CustomerProfiles getCustomerProfile(String username) {
+        return this.userRepo.getCustomerProfileByUsername(username);
     }
 }

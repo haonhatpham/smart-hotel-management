@@ -1,9 +1,9 @@
 import { useContext, useEffect, useState } from "react";
 import { Alert, Button, Card, Col, Row, Spinner, Form } from "react-bootstrap";
-import Apis, { endpoints } from "../configs/Api";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import Apis, { authApis, endpoints } from "../configs/Api";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import cookie from 'react-cookies';
-import { MyCartContext } from "../configs/MyContexts";
+import { MyCartContext, MyUserContext } from "../configs/MyContexts";
 
 const Booking = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -12,9 +12,11 @@ const Booking = () => {
     const [roomTypes, setRoomTypes] = useState([]);
     const [selectedRooms, setSelectedRooms] = useState([]);
     const [, cartDispatch] = useContext(MyCartContext);
+    const [user] = useContext(MyUserContext);
     const [dateError, setDateError] = useState('');
     const [expandedRoom, setExpandedRoom] = useState(null); 
     const [services, setServices] = useState([]);
+    const [customerProfile, setCustomerProfile] = useState(null);
     const [searchForm, setSearchForm] = useState({
         checkIn: '',
         checkOut: '',
@@ -22,6 +24,7 @@ const Booking = () => {
         roomType: ''
     });
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         loadRoomTypes();
         loadServices();
@@ -31,12 +34,13 @@ const Booking = () => {
 
     
     useEffect(() => {
-        const saved = cookie.load('cart') || {};
+        const cartKey = user ? `cart_${user.id}` : 'cart_guest';
+        const saved = cookie.load(cartKey) || {};
         const items = Object.values(saved);
         if (items.length > 0) {
             setSelectedRooms(items);
         }
-    }, []);
+    }, [user]);
 
     useEffect(() => {
         if (searchParams.get('checkIn') && searchParams.get('checkOut')) {
@@ -49,6 +53,22 @@ const Booking = () => {
             searchRooms();
         }
     }, [searchParams]);
+
+    // Tải Customer Profile khi đã đăng nhập (refetch khi user sẵn sàng)
+    useEffect(() => {
+        const token = cookie.load('token');
+        if (!token) return;
+        console.log('[Booking] Fetching customer-profile...');
+        authApis().get(endpoints['customer-profile'])
+            .then(res => {
+                console.log('[Booking] customer-profile response:', res.status, res.data);
+                setCustomerProfile(res.data);
+            })
+            .catch(err => {
+                console.error('[Booking] customer-profile error:', err);
+                setCustomerProfile(null);
+            });
+    }, [user]);
 
     const loadRoomTypes = async () => {
         try {
@@ -204,7 +224,8 @@ const Booking = () => {
         }
 
         // Luôn lưu vào cookie và tăng badge
-        let cart = cookie.load('cart') || {};
+        const cartKey = user ? `cart_${user.id}` : 'cart_guest';
+        let cart = cookie.load(cartKey) || {};
         const bookingKey = `${roomBooking.id}_${roomBooking.checkIn}_${roomBooking.checkOut}`;
         cart[bookingKey] = {
             id: roomBooking.id,
@@ -218,7 +239,7 @@ const Booking = () => {
             guests: roomBooking.guests,
             selectedServices: roomBooking.selectedServices
         };
-        cookie.save('cart', cart);
+        cookie.save(cartKey, cart);
         cartDispatch({ "type": "inc" });
 
         setExpandedRoom(null);
@@ -236,12 +257,13 @@ const Booking = () => {
         }
 
         try {
-            const cart = cookie.load('cart') || {};
+            const cartKey = user ? `cart_${user.id}` : 'cart_guest';
+            const cart = cookie.load(cartKey) || {};
             if (target) {
                 const bookingKey = `${target.id}_${target.checkIn}_${target.checkOut}`;
                 if (cart[bookingKey]) {
                     delete cart[bookingKey];
-                    cookie.save('cart', cart);
+                    cookie.save(cartKey, cart);
                 }
             }
         } catch (_) {}
@@ -259,6 +281,12 @@ const Booking = () => {
             alert('Vui lòng chọn ít nhất một phòng');
             return;
         }
+
+        if (!user) {
+            navigate('/login?next=/checkout');
+            return;
+        }
+
         navigate('/checkout');
     };
 
@@ -547,6 +575,27 @@ const Booking = () => {
                 <Col md={4}>
                     <Card className="sticky-top" style={{top: '20px'}}>
                         <Card.Body>
+                            {cookie.load('token') && (
+                                <div className="mb-3 p-3 bg-light rounded">
+                                    <div className="fw-bold mb-2">
+                                        <i className="fas fa-user me-2"></i>
+                                        Thông tin của bạn
+                                    </div>
+                                    <div className="small mb-1">Họ tên: {user?.fullName || '—'}</div>
+                                    <div className="small mb-1">Email: {user?.email || '—'}</div>
+                                    <div className="small mb-1">SĐT: {user?.phone || '—'}</div>
+                                    {customerProfile && (
+                                        <>
+                                            <div className="small mb-1">Địa chỉ: {customerProfile.address || '—'}</div>
+                                            <div className="small mb-1">Ngày sinh: {customerProfile.dob ? new Date(customerProfile.dob).toLocaleDateString() : '—'}</div>
+                                            <div className="small">Điểm tích lũy: {customerProfile.loyaltyPoint}</div>
+                                        </>
+                                    )}
+                                    {!customerProfile && (
+                                        <div className="text-muted small">Đang tải hồ sơ khách hàng...</div>
+                                    )}
+                                </div>
+                            )}
                             {searchForm.checkIn && searchForm.checkOut && (
                                 <div className="mb-3 p-3 bg-light rounded">
                                     <div className="fw-bold mb-2">
@@ -621,13 +670,13 @@ const Booking = () => {
                                     </div>
                                     
                                     <Button 
-                                        variant="success" 
+                                        variant={user ? "success" : "warning"}
                                         size="lg" 
                                         className="w-100"
                                         onClick={handleBookNow}
                                     >
                                         <i className="fas fa-credit-card me-2"></i>
-                                        Đặt phòng
+                                        {user ? 'Đặt phòng' : 'Bạn cần đăng nhập để thanh toán'}
                                     </Button>
                                 </div>
                             )}
