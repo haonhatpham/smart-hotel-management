@@ -35,6 +35,7 @@ public interface RoomService {
 
     int updateStatusByIds(List<Long> ids, String status);
 
+
     long countByStatus(String status);
     
 

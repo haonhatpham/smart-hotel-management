@@ -1,8 +1,8 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Quản lý phòng - Bảng</title>
+    <head>
+        <meta charset="UTF-8">
+        <title>Quản lý phòng - Bảng</title>
     <th:block th:replace="base :: bt"></th:block>
 </head>
 <body>
@@ -38,12 +38,13 @@
                         <img th:if="${r.imageUrl}" th:src="${r.imageUrl}" alt="image" style="height:40px; object-fit:cover;">
                     </td>
                     <td class="text-end">
-                        <a th:href="@{'/reception/rooms/' + ${r.id} + '/edit'}" class="btn btn-sm btn-info">Cập nhật</a>
+                        <a th:if="${#authorization.expression('hasRole(''RECEPTION'')')}" th:href="@{'/reception/rooms/' + ${r.id} + '/edit'}" class="btn btn-sm btn-info">Cập nhật</a>
+                        <a th:if="${#authorization.expression('hasRole(''HOUSEKEEPING'')')}" th:href="@{'/housekeeping/rooms/' + ${r.id} + '/edit'}" class="btn btn-sm btn-info">Cập nhật</a>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(rooms)}">
                     <td colspan="7" class="text-center text-muted">Chưa có phòng</td>
-                </tr>
+                </tr>       
             </tbody>
         </table>
     </div>

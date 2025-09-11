@@ -7,7 +7,7 @@ import Checkout from "./components/Checkout";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Container } from "react-bootstrap";
 import { MyUserContext, MyCartContext } from "./configs/MyContexts";
-import { useReducer, useState,useEffect } from "react";
+import { useReducer,useEffect } from "react";
 import { MyUsrReducer } from "./reducers/MyUserReducer";
 import { MyCartReducer } from "./reducers/MyCartReducer";
 import '@fortawesome/fontawesome-free/css/all.min.css';

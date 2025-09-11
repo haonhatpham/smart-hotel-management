@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
-public class BookingController {
+public class BookingManagerController {
     @Autowired
     private RoomTypeService roomTypeService;
     
@@ -19,8 +19,7 @@ public class BookingController {
     private RoomService roomService;
     @GetMapping("/booking_manage")
     public String bookingManage(Model model) {
-        model.addAttribute("rooms", this.roomService.getRooms(java.util.Collections.emptyMap()));
-        model.addAttribute("room", new Rooms());
+        model.addAttribute("rooms", this.roomService.getRooms(null));
         model.addAttribute("roomTypes", this.roomTypeService.getRoomTypes());
         return "booking_manage"; 
     }
@@ -30,7 +29,7 @@ public class BookingController {
     public String editRoom(@PathVariable("id") Long id, Model model) {
         Rooms room = this.roomService.getRoomById(id);
         if (room == null) {
-            return "redirect:/reception";
+            return "booking_manage";
         }
         model.addAttribute("room", room);
         model.addAttribute("roomTypes", this.roomTypeService.getRoomTypes());
@@ -38,15 +37,14 @@ public class BookingController {
     }
     
     @PostMapping("/reception/rooms")
-    public String updateRoomStatus(@ModelAttribute Rooms room) {
+    public String updateRoomStatus(@ModelAttribute Rooms room,Model model) {
     Rooms existingRoom = roomService.getRoomById(room.getId());
     if (existingRoom != null) {
         existingRoom.setStatus(room.getStatus()); // chỉ update status
         roomService.addOrUpdate(existingRoom);
     }
-    return "redirect:/booking_manage";
+    model.addAttribute("rooms", this.roomService.getRooms(null));
+    model.addAttribute("roomTypes", this.roomTypeService.getRoomTypes());
+    return "booking_manage";
 }
-
-
-    
 }

@@ -122,4 +122,5 @@ public class RoomServiceImpl implements RoomService {
     public long countByRoomType(Long roomTypeId) {
         return this.roomRepository.countByRoomType(roomTypeId);
     }
+
 }
