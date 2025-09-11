@@ -12,8 +12,8 @@ import java.util.List;
 public interface PaymentRepository {
     Payments createPayment(Payments payment);
     Payments updatePayment(Payments payment);
-    Payments getPaymentById(int id);
-    List<Payments> getPaymentsByEnrollmentId(int enrollmentId);
+    Payments getPaymentById(Long id);
+    List<Payments> getPaymentsByReservationId(Long reservationId);
     List<Payments> getPaymentsByStatus(String status);
-    Payments getPaymentByTransactionId(String transactionId);    
+    Payments getPaymentByTransactionId(String transactionId);
 }
