@@ -40,7 +40,7 @@ public class PaymentRepositoryImpl implements PaymentRepository{
     @Override
     public Payments getPaymentById(Long id) {
         Session session = this.factory.getObject().getCurrentSession();
-        return session.get(Payments.class, id);
+        return session.find(Payments.class, id);
         }
 
     @Override
