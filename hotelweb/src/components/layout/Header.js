@@ -8,7 +8,6 @@ const Header = () => {
     const [roomTypes, setRoomTypes] = useState([]);
     const [services, setServices] = useState([]);
     const [user, dispatch] = useContext(MyUserContext);
-    const [cartCounter, ] = useContext(MyCartContext);
 
     const loadRoomTypes = async () => {
         try {
@@ -63,10 +62,7 @@ const Header = () => {
                             <Link className="nav-link text-success" to="/">Chào {user.username}</Link>
                             <Button variant="danger"onClick={() => dispatch({"type": "logout"})}>Đăng xuất</Button>
                         </>}
-                        
-                        <Link className="nav-link text-success" to="/cart">Giỏ hàng <Badge variant="danger" className="bg-danger">{cartCounter}</Badge></Link>
-                      
-                        
+                                                    
                         <Button 
                             as={Link}
                             to="/booking"

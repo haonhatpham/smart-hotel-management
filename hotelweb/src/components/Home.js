@@ -11,7 +11,6 @@ const Home = () => {
     const [loading, setLoading] = useState(true);
     const [hasMore, setHasMore] = useState(true); 
     const [q] = useSearchParams();
-    const [, cartDispatch] = useContext(MyCartContext);
 
     const loadRooms = async () => {
         try {
@@ -59,27 +58,6 @@ const Home = () => {
 
     const loadMore = () => {
         setPage(page + 1);
-    }
-
-    const addToCart = (room) => {
-        let cart = cookie.load('cart') || {};
-
-        if (room.id in cart) {
-            cart[room.id]["puantity"]++;
-        } else {
-            cart[room.id] = {
-                "id": room.id,
-                "roomNumber": room.roomNumber,
-                "roomType": room.roomTypeId?.name,
-                "price": room.roomTypeId?.price,
-                "puantity": 1
-            }
-        }
-
-        cookie.save('cart', cart);
-        cartDispatch({
-            "type": "inc"
-        });
     }
 
     return (
@@ -139,7 +117,7 @@ const Home = () => {
                                     </Button>
                                     <Button 
                                         variant="primary" 
-                                        onClick={() => addToCart(room)}
+                                        // onClick={}
                                     >
                                         Thêm vào giỏ
                                     </Button>

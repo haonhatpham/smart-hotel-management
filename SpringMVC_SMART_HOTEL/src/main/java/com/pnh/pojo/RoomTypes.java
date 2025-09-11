@@ -49,7 +49,6 @@ public class RoomTypes implements Serializable {
     @Size(min = 1, max = 120)
     @Column(name = "name")
     private String name;
-    // @Max(value=?)  @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce field validation
     @Basic(optional = false)
     @NotNull
     @Column(name = "price")
@@ -165,5 +164,5 @@ public class RoomTypes implements Serializable {
     public String toString() {
         return "com.pnh.pojo.RoomTypes[ id=" + id + " ]";
     }
-    
+
 }

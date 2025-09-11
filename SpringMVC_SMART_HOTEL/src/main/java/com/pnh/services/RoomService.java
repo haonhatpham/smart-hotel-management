@@ -16,7 +16,6 @@ import java.util.Map;
 public interface RoomService {
 
     List<Rooms> getRooms(Map<String, String> params);
-    
 
     Rooms getRoomById(Long id);
 
@@ -31,24 +30,13 @@ public interface RoomService {
     boolean isRoomFree(Long roomId, LocalDate checkIn, LocalDate checkOut);
     
     List<Rooms> findByRoomTypeId(Long roomTypeId);
-    
-    /**
-     * Tìm phòng theo trạng thái
-     */
+
     List<Rooms> findByStatus(String status);
-    
-    /**
-     * Cập nhật trạng thái cho nhiều phòng
-     */
+
     int updateStatusByIds(List<Long> ids, String status);
-    
-    /**
-     * Đếm số phòng theo trạng thái
-     */
+
     long countByStatus(String status);
     
-    /**
-     * Đếm số phòng theo loại phòng
-     */
+
     long countByRoomType(Long roomTypeId);
 }

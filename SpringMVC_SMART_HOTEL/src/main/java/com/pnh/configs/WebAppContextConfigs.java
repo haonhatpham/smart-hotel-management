@@ -6,6 +6,7 @@ package com.pnh.configs;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.pnh.formatters.RoomTypeFormatter;
 //import com.dht.formatters.CategoryFormatter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -48,5 +49,8 @@ public class WebAppContextConfigs implements WebMvcConfigurer {
     }
 
 
-
+    @Override
+    public void addFormatters(FormatterRegistry registry){
+        registry.addFormatter(new RoomTypeFormatter());
+    }
 }
