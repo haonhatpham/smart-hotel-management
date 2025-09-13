@@ -8,6 +8,8 @@ export const endpoints = {
     'services': '/services',
     'reservations': '/reservations',
     'review': (id) => `/reservations/${id}/review`,
+    'payment-process': '/process',
+    'payment-status': '/status',
     'register': '/users',
     'login': '/login',
     'profile': '/secure/profile',

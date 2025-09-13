@@ -53,7 +53,7 @@ public class Payments implements Serializable {
     private BigDecimal amount;
     @Basic(optional = false)
     @NotNull
-    @Size(min = 1, max = 6)
+    @Size(min = 1, max = 20)
     @Column(name = "method")
     private String method;
     @Size(max = 100)
@@ -61,7 +61,7 @@ public class Payments implements Serializable {
     private String transactionId;
     @Basic(optional = false)
     @NotNull
-    @Size(min = 1, max = 7)
+    @Size(min = 1, max = 20)
     @Column(name = "status")
     private String status;
     @Column(name = "paid_at")

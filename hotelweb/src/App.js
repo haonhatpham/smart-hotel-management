@@ -18,6 +18,7 @@ import ReservationDetail from "./components/ReservationDetail";
 import ReviewForm from "./components/ReviewForm";
 import cookie from 'react-cookies'
 import { authApis, endpoints } from "./configs/Api";
+import Thankyou from "./components/thankyou";
 
 
 const App = () => {
@@ -58,6 +59,7 @@ const App = () => {
               <Route path="/profile" element={<Profile />} />
               <Route path="/reservations/:id" element={<ReservationDetail />} />
               <Route path="/reservations/:id/review" element={<ReviewForm />} />
+              <Route path="/thankyou/result" element={<Thankyou />} />
             </Routes>
           </Container>
 
