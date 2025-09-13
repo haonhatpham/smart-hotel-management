@@ -10,13 +10,12 @@ const Booking = () => {
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(true);
     const [roomTypes, setRoomTypes] = useState([]);
-    const [selectedRooms, setSelectedRooms] = useState([]);
-    const [, cartDispatch] = useContext(MyCartContext);
+    const [cartState, cartDispatch] = useContext(MyCartContext);
     const [user] = useContext(MyUserContext);
     const [dateError, setDateError] = useState('');
     const [expandedRoom, setExpandedRoom] = useState(null); 
     const [services, setServices] = useState([]);
-    const [customerProfile, setCustomerProfile] = useState(null);
+    const [, setCustomerProfile] = useState(null);
     const [searchForm, setSearchForm] = useState({
         checkIn: '',
         checkOut: '',
@@ -37,10 +36,15 @@ const Booking = () => {
         const cartKey = user ? `cart_${user.id}` : 'cart_guest';
         const saved = cookie.load(cartKey) || {};
         const items = Object.values(saved);
-        if (items.length > 0) {
-            setSelectedRooms(items);
-        }
-    }, [user]);
+        
+        // Dispatch từng item vào reducer để sync state
+        items.forEach(item => {
+            cartDispatch({
+                type: "add",
+                payload: item
+            });
+        });
+    }, [user, cartDispatch]);
 
     useEffect(() => {
         if (searchParams.get('checkIn') && searchParams.get('checkOut')) {
@@ -53,6 +57,8 @@ const Booking = () => {
             searchRooms();
         }
     }, [searchParams]);
+
+    // Không tự động xóa phòng khi thay đổi ngày - để người dùng tự quyết định
 
     // Tải Customer Profile khi đã đăng nhập (refetch khi user sẵn sàng)
     useEffect(() => {
@@ -185,9 +191,9 @@ const Booking = () => {
     };
 
     const handleSelectRoom = (room) => {
-        const isSelectedForDates = selectedRooms.some(r => r.id === room.id && r.checkIn === searchForm.checkIn && r.checkOut === searchForm.checkOut);
-        if (isSelectedForDates) {
-            handleRemoveRoom(room.id, searchForm.checkIn, searchForm.checkOut);
+        const existingRoom = cartState.rooms.find(r => r.id === room.id);
+        if (existingRoom) {
+            handleRemoveRoom(room.id, existingRoom.checkIn, existingRoom.checkOut);
             setExpandedRoom(null);
             return;
         }
@@ -199,85 +205,78 @@ const Booking = () => {
         }
     };
 
-    const handleAddRoomToCart = (room, selectedServices = []) => {
+    const handleAddRoomToCart = (room, selectedServices = []) => {        
         const nights = searchForm.checkIn && searchForm.checkOut ? 
             Math.ceil((new Date(searchForm.checkOut) - new Date(searchForm.checkIn)) / (1000 * 60 * 60 * 24)) : 1;
         
-        const basePrice = room.roomTypeId?.price * nights;
-        const servicesTotal = (selectedServices || []).reduce((sum, s) => sum + ((s.price || 0) * nights), 0);
-        
         const roomBooking = {
-            ...room,
-            nights: nights,
-            totalPrice: basePrice + servicesTotal,
+            id: room.id,
+            roomNumber: room.roomNumber,
+            roomType: room.roomTypeId?.name,
+            price: room.roomTypeId?.price, 
             checkIn: searchForm.checkIn,
             checkOut: searchForm.checkOut,
             guests: searchForm.guests,
-            selectedServices: selectedServices
+            nights: nights,
+            services: selectedServices.map(service => ({
+                id: service.id,
+                name: service.name,
+                price: service.price,  
+                quantity: nights,      
+                totalPrice: service.price * nights  
+            }))
         };
 
-        const existingIndex = selectedRooms.findIndex(r => r.id === room.id);
-        if (existingIndex >= 0) {
-            setSelectedRooms(prev => prev.filter(r => r.id !== room.id));
-        } else {
-            setSelectedRooms(prev => [...prev, roomBooking]);
-        }
-
-        // Luôn lưu vào cookie và tăng badge
         const cartKey = user ? `cart_${user.id}` : 'cart_guest';
         let cart = cookie.load(cartKey) || {};
-        const bookingKey = `${roomBooking.id}_${roomBooking.checkIn}_${roomBooking.checkOut}`;
-        cart[bookingKey] = {
-            id: roomBooking.id,
-            roomNumber: roomBooking.roomNumber,
-            roomType: roomBooking.roomTypeId?.name,
-            pricePerNight: roomBooking.roomTypeId?.price,
-            checkIn: roomBooking.checkIn,
-            checkOut: roomBooking.checkOut,
-            nights: roomBooking.nights,
-            totalPrice: roomBooking.totalPrice,
-            guests: roomBooking.guests,
-            selectedServices: roomBooking.selectedServices
-        };
+        
+        const existingRoom = cartState.rooms.find(r => r.id === room.id);
+        if (existingRoom) {
+            const oldBookingKey = `${room.id}_${existingRoom.checkIn}_${existingRoom.checkOut}`;
+            if (cart[oldBookingKey]) {
+                delete cart[oldBookingKey];
+            }
+            cartDispatch({ 
+                type: "delete", 
+                payload: { id: room.id, checkIn: existingRoom.checkIn, checkOut: existingRoom.checkOut }
+            });
+        }
+        
+        const newBookingKey = `${room.id}_${searchForm.checkIn}_${searchForm.checkOut}`;
+        cart[newBookingKey] = roomBooking;
         cookie.save(cartKey, cart);
-        cartDispatch({ "type": "inc" });
+
+        cartDispatch({ 
+            type: "add", 
+            payload: roomBooking
+        });
 
         setExpandedRoom(null);
     };
 
 
     const handleRemoveRoom = (roomId, checkIn, checkOut) => {
-        let target = null;
-        if (checkIn && checkOut) {
-            target = selectedRooms.find(r => r.id === roomId && r.checkIn === checkIn && r.checkOut === checkOut);
-            setSelectedRooms(prev => prev.filter(r => !(r.id === roomId && r.checkIn === checkIn && r.checkOut === checkOut)));
-        } else {
-            target = selectedRooms.find(r => r.id === roomId);
-            setSelectedRooms(prev => prev.filter(r => r.id !== roomId));
+        const cartKey = user ? `cart_${user.id}` : 'cart_guest';
+        let cart = cookie.load(cartKey) || {};
+        const bookingKey = `${roomId}_${checkIn}_${checkOut}`;
+        
+        if (cart[bookingKey]) {
+            delete cart[bookingKey];
+            cookie.save(cartKey, cart);
         }
-
-        try {
-            const cartKey = user ? `cart_${user.id}` : 'cart_guest';
-            const cart = cookie.load(cartKey) || {};
-            if (target) {
-                const bookingKey = `${target.id}_${target.checkIn}_${target.checkOut}`;
-                if (cart[bookingKey]) {
-                    delete cart[bookingKey];
-                    cookie.save(cartKey, cart);
-                }
-            }
-        } catch (_) {}
+        
+        cartDispatch({ 
+            type: "delete", 
+            payload: { id: roomId, checkIn, checkOut }
+        });
     };
 
-    const calculateGrandTotal = () => {
-        return selectedRooms.reduce((total, room) => total + room.totalPrice, 0);
-    };
 
 
     const navigate = useNavigate();
 
     const handleBookNow = () => {
-        if (selectedRooms.length === 0) {
+        if (cartState.rooms.length === 0) {
             alert('Vui lòng chọn ít nhất một phòng');
             return;
         }
@@ -410,7 +409,7 @@ const Booking = () => {
                                 const nights = searchForm.checkIn && searchForm.checkOut ? 
                                     Math.ceil((new Date(searchForm.checkOut) - new Date(searchForm.checkIn)) / (1000 * 60 * 60 * 24)) : 1;
                                 const totalPrice = room.roomTypeId?.price * nights;
-                                const isSelected = selectedRooms.some(r => r.id === room.id);
+                                const isSelected = cartState.rooms.some(r => r.id === room.id);
                                 
                                 return (
                                     <>
@@ -424,10 +423,7 @@ const Booking = () => {
                                     >
                                         <Row className="g-0">
                                             <Col md={5}>
-                                                <Card.Img 
-                                                    src={room.imageUrl || "https://images.unsplash.com/photo-1611892440504-42a792e24d32"}
-                                                    style={{height: '200px', objectFit: 'cover', borderRadius: '8px 0 0 8px'}}
-                                                />
+                                                <Card.Img src={room.imageUrl} style={{height: '200px', objectFit: 'cover', borderRadius: '8px 0 0 8px'}}/>
                                             </Col>
                                             <Col md={7}>
                                                 <Card.Body className="h-100 d-flex flex-column">
@@ -575,27 +571,6 @@ const Booking = () => {
                 <Col md={4}>
                     <Card className="sticky-top" style={{top: '20px'}}>
                         <Card.Body>
-                            {cookie.load('token') && (
-                                <div className="mb-3 p-3 bg-light rounded">
-                                    <div className="fw-bold mb-2">
-                                        <i className="fas fa-user me-2"></i>
-                                        Thông tin của bạn
-                                    </div>
-                                    <div className="small mb-1">Họ tên: {user?.fullName || '—'}</div>
-                                    <div className="small mb-1">Email: {user?.email || '—'}</div>
-                                    <div className="small mb-1">SĐT: {user?.phone || '—'}</div>
-                                    {customerProfile && (
-                                        <>
-                                            <div className="small mb-1">Địa chỉ: {customerProfile.address || '—'}</div>
-                                            <div className="small mb-1">Ngày sinh: {customerProfile.dob ? new Date(customerProfile.dob).toLocaleDateString() : '—'}</div>
-                                            <div className="small">Điểm tích lũy: {customerProfile.loyaltyPoint}</div>
-                                        </>
-                                    )}
-                                    {!customerProfile && (
-                                        <div className="text-muted small">Đang tải hồ sơ khách hàng...</div>
-                                    )}
-                                </div>
-                            )}
                             {searchForm.checkIn && searchForm.checkOut && (
                                 <div className="mb-3 p-3 bg-light rounded">
                                     <div className="fw-bold mb-2">
@@ -608,7 +583,7 @@ const Booking = () => {
                                 </div>
                             )}
 
-                            {selectedRooms.length === 0 ? (
+                            {cartState.rooms.length === 0 ? (
                                 <div className="text-center py-4 text-muted">
                                     <i className="fas fa-bed fa-2x mb-2"></i>
                                     <p>Chưa có phòng nào được chọn</p>
@@ -616,24 +591,28 @@ const Booking = () => {
                             ) : (
                                 <div>
                                     <h6 className="mb-3">Phòng đã chọn:</h6>
-                                    {selectedRooms.map(room => (
+                                    {cartState.rooms.map(room => (
                                         <div key={room.id} className="border rounded p-3 mb-2">
                                             <div className="d-flex justify-content-between align-items-start">
                                                 <div className="flex-grow-1">
-                                                    <div className="fw-bold">{room.roomTypeId?.name}</div>
+                                                    <div className="fw-bold">{room.roomType}</div>
                                                     <small className="text-muted">
                                                         {room.guests} khách • {room.nights} đêm
                                                     </small>
+                                                    <div className="small text-muted">
+                                                        <i className="fas fa-calendar me-1"></i>
+                                                        {room.checkIn} → {room.checkOut}
+                                                    </div>
                                                     
                                                     {/* Hiển thị dịch vụ đã chọn */}
-                                                    {room.selectedServices && room.selectedServices.length > 0 && (
+                                                    {room.services && room.services.length > 0 && (
                                                         <div className="mt-2">
                                                             <small className="text-info fw-bold">Dịch vụ đi kèm:</small>
                                                             <ul className="list-unstyled mt-1">
-                                                                {room.selectedServices.map(service => (
+                                                                {room.services.map(service => (
                                                                     <li key={service.id} className="small text-muted">
                                                                         <i className="fas fa-check-circle text-success me-1"></i>
-                                                                        {service.name} (+{service.price?.toLocaleString()} VND)
+                                                                        {service.name} x{service.quantity} (+{service.totalPrice?.toLocaleString()} VND)
                                                                     </li>
                                                                 ))}
                                                             </ul>
@@ -642,12 +621,12 @@ const Booking = () => {
                                                 </div>
                                                 <div className="text-end">
                                                     <div className="fw-bold text-primary">
-                                                        {room.totalPrice?.toLocaleString()} VND
+                                                        {(room.price * room.nights + (room.services?.reduce((sum, s) => sum + s.totalPrice, 0) || 0)).toLocaleString()} VND
                                                     </div>
                                                     <Button 
                                                         variant="outline-danger" 
                                                         size="sm"
-                                                        onClick={() => handleRemoveRoom(room.id)}
+                                                        onClick={() => handleRemoveRoom(room.id, room.checkIn, room.checkOut)}
                                                     >
                                                         <i className="fas fa-trash"></i>
                                                     </Button>
@@ -661,7 +640,7 @@ const Booking = () => {
                                     <div className="d-flex justify-content-between align-items-center mb-3">
                                         <span className="h5 mb-0">Tổng cộng:</span>
                                         <span className="h4 text-primary fw-bold mb-0">
-                                            {calculateGrandTotal().toLocaleString()} VND
+                                            {cartState.total.toLocaleString()} VND
                                         </span>
                                     </div>
                                     

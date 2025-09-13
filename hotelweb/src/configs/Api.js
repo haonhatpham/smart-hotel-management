@@ -7,6 +7,7 @@ export const endpoints = {
     'rooms': '/rooms',
     'services': '/services',
     'reservations': '/reservations',
+    'review': (id) => `/reservations/${id}/review`,
     'register': '/users',
     'login': '/login',
     'profile': '/secure/profile',

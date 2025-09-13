@@ -1,7 +1,7 @@
-    import { use, useRef, useState } from "react";
+    import { useRef, useState } from "react";
     import { Alert, Button, Form } from "react-bootstrap";
     import MySpinner from "./layout/MySpiner";   
-    import Apis, { authApis,endpoints } from "../configs/Api";
+    import Apis, { endpoints } from "../configs/Api";
     import { useNavigate } from "react-router-dom";
 
 
@@ -43,10 +43,72 @@
         const nav = useNavigate();
 
         const validate = () => {
-            if (user.password == null || user.password != user.confirm) {
+            const requiredFields = ['firstName', 'lastName', 'phone', 'email', 'username', 'password', 'confirm'];
+            
+            for (let field of requiredFields) {
+                if (!user[field] || user[field].trim() === '') {
+                    const fieldTitle = info.find(i => i.field === field)?.title;
+                    setErr(`${fieldTitle} không được để trống!`);
+                    return false;
+                }
+            }
+            
+            if (user.firstName.trim().length < 2) {
+                setErr("Tên phải có ít nhất 2 ký tự!");
+                return false;
+            }
+            
+            if (user.lastName.trim().length < 2) {
+                setErr("Họ và tên lót phải có ít nhất 2 ký tự!");
+                return false;
+            }
+            
+            // 3. Kiểm tra username
+            if (user.username.length < 3) {
+                setErr("Tên đăng nhập phải có ít nhất 3 ký tự!");
+                return false;
+            }
+            
+            if (user.username.length > 20) {
+                setErr("Tên đăng nhập không được quá 20 ký tự!");
+                return false;
+            }
+            
+            const usernameRegex = /^[a-zA-Z0-9_]+$/;
+            if (!usernameRegex.test(user.username)) {
+                setErr("Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới!");
+                return false;
+            }
+            
+            // 4. Kiểm tra email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(user.email)) {
+                setErr("Email không hợp lệ!");
+                return false;
+            }
+            
+            const cleanPhone = user.phone.replace(/\s/g, '');
+            const phoneRegex = /^[0-9]{10,11}$/;
+            if (!phoneRegex.test(cleanPhone)) {
+                setErr("Số điện thoại phải có 10-11 chữ số!");
+                return false;
+            }
+            
+            if (user.password.length < 6) {
+                setErr("Mật khẩu phải có ít nhất 6 ký tự!");
+                return false;
+            }
+            
+            if (user.password.length > 50) {
+                setErr("Mật khẩu không được quá 50 ký tự!");
+                return false;
+            }
+            
+            if (user.password !== user.confirm) {
                 setErr("Mật khẩu không khớp!");
                 return false;
             }
+            
             return true;
         }
 
@@ -57,7 +119,6 @@
                     setLoading(true);
 
                     let formData = new FormData();
-                        // append các field trừ confirm, firstName, lastName
                     for (let key in user) {
                         if (key !== "confirm" && key !== "firstName" && key !== "lastName") {
                             formData.append(key, user[key]);

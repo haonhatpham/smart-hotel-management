@@ -1,15 +1,13 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Button, Card, Col, Row, Spinner } from "react-bootstrap";
 import Apis, { endpoints } from "../configs/Api";
 import { useSearchParams, Link } from "react-router-dom";
-import cookie from 'react-cookies';
-import { MyCartContext } from "../configs/MyContexts";
 
 const Home = () => {
     const [rooms, setRooms] = useState([]);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
-    const [hasMore, setHasMore] = useState(true); 
+    const [hasMore, setHasMore] = useState(false); 
     const [q] = useSearchParams();
 
     const loadRooms = async () => {
@@ -39,7 +37,7 @@ const Home = () => {
                 setHasMore(false);
             }
         } catch (ex) {
-            console.error("Full error:", ex);
+            console.error("error:", ex);
         } finally {
             setLoading(false);
         }

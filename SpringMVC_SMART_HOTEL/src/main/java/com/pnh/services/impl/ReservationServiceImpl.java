@@ -6,6 +6,7 @@ package com.pnh.services.impl;
 
 import com.pnh.pojo.Invoices;
 import com.pnh.pojo.ReservationRooms;
+import com.pnh.pojo.ServiceOrders;
 import com.pnh.pojo.Reservations;
 import com.pnh.repositories.ReservationRepository;
 import com.pnh.services.ReservationService;
@@ -56,5 +57,20 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public List<Reservations> getReservations(Map<String, String> params) {
         return this.reservationRepository.getReservations(params);
+    }
+
+    @Override
+    public List<ReservationRooms> getReservationRooms(Long reservationId) {
+        return this.reservationRepository.getReservationRooms(reservationId);
+    }
+
+    @Override
+    public List<ServiceOrders> getServiceOrders(Long reservationId) {
+        return this.reservationRepository.getServiceOrders(reservationId);
+    }
+
+    @Override
+    public Invoices getInvoiceByReservationId(Long reservationId) {
+        return this.reservationRepository.getInvoiceByReservationId(reservationId);
     }
 }

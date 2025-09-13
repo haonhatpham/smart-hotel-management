@@ -4,6 +4,9 @@
  */
 package com.pnh.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -31,6 +34,14 @@ import java.util.Set;
  * @author ADMIN
  */
 @Entity
+@JsonIgnoreProperties({
+    "reservationRoomsSet",
+    "paymentsSet",
+    "serviceOrdersSet",
+    "reviewsSet",
+    "invoices",
+    "createdBy"
+})
 @Table(name = "reservations")
 @NamedQueries({
     @NamedQuery(name = "Reservations.findAll", query = "SELECT r FROM Reservations r"),

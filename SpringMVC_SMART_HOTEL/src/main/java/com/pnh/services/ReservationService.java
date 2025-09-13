@@ -3,6 +3,7 @@ package com.pnh.services;
 import com.pnh.pojo.Invoices;
 import com.pnh.pojo.ReservationRooms;
 import com.pnh.pojo.Reservations;
+import com.pnh.pojo.ServiceOrders;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -17,4 +18,8 @@ public interface ReservationService {
     boolean hasOverlapForAnyRoom(List<Long> roomIds, LocalDate checkIn, LocalDate checkOut, List<String> statuses);
 
     List<Reservations> getReservations(Map<String, String> params);
+
+    List<ReservationRooms> getReservationRooms(Long reservationId);
+    List<ServiceOrders> getServiceOrders(Long reservationId);
+    Invoices getInvoiceByReservationId(Long reservationId);
 }

@@ -7,6 +7,7 @@ package com.pnh.repositories.impl;
 import com.pnh.pojo.Invoices;
 import com.pnh.pojo.ReservationRooms;
 import com.pnh.pojo.Reservations;
+import com.pnh.pojo.ServiceOrders;
 import com.pnh.repositories.ReservationRepository;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -61,6 +62,14 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     public List<ReservationRooms> getReservationRooms(Long reservationId) {
         Session s = this.factory.getObject().getCurrentSession();
         return s.createQuery("FROM ReservationRooms rr WHERE rr.reservationId.id = :rid ORDER BY rr.id", ReservationRooms.class)
+                .setParameter("rid", reservationId)
+                .getResultList();
+    }
+
+    @Override
+    public List<ServiceOrders> getServiceOrders(Long reservationId) {
+        Session s = this.factory.getObject().getCurrentSession();
+        return s.createQuery("FROM ServiceOrders so WHERE so.reservationId.id = :rid ORDER BY so.orderedAt", ServiceOrders.class)
                 .setParameter("rid", reservationId)
                 .getResultList();
     }
@@ -134,8 +143,15 @@ public class ReservationRepositoryImpl implements ReservationRepository {
         List<Predicate> predicates = new ArrayList<>();
         if (params != null) {
             String customerId = params.get("customerId");
-            if (customerId != null && !customerId.isEmpty()) {
-                predicates.add(b.equal(root.get("customerId").get("id"), Long.valueOf(customerId)));
+            if (customerId != null) {
+                customerId = customerId.trim();
+                if (!customerId.isEmpty()) {
+                    try {
+                        predicates.add(b.equal(root.get("customerId").get("id"), Long.valueOf(customerId)));
+                    } catch (NumberFormatException ex) {
+                        // Bỏ qua filter nếu id không hợp lệ để tránh 500
+                    }
+                }
             }
             String status = params.get("status");
             if (status != null && !status.isEmpty()) {

@@ -2,13 +2,13 @@ import { useContext, useEffect, useState } from "react";
 import { Card, Button, Form, Row, Col } from "react-bootstrap";
 import cookie from "react-cookies";
 import { Link, useNavigate } from "react-router-dom";
-import { MyUserContext } from "../configs/MyContexts";
+import { MyUserContext, MyCartContext } from "../configs/MyContexts";
 import { authApis, endpoints } from "../configs/Api";
 
 const Checkout = () => {
-    const [cartItems, setCartItems] = useState([]);
     const [user] = useContext(MyUserContext);
-    const [customerProfile, setCustomerProfile] = useState(null);
+    const [cartState, cartDispatch] = useContext(MyCartContext);
+    const [, setCustomerProfile] = useState(null);
     const [agree, setAgree] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('bank_card');
     const [form, setForm] = useState({
@@ -27,15 +27,7 @@ const Checkout = () => {
         }
     }, [navigate]);
 
-    // Load giỏ hàng
-    useEffect(() => {
-        const cartKey = user ? `cart_${user.id}` : 'cart_guest';
-        const cart = cookie.load(cartKey) || {};
-        const items = Object.values(cart);
-        setCartItems(items);
-    }, [user]);
 
-    // Đổ dữ liệu user vào form
     useEffect(() => {
         if (user) {
             setForm(prev => ({
@@ -47,7 +39,7 @@ const Checkout = () => {
         }
     }, [user]);
 
-    // Tải customer profile nếu đã đăng nhập
+
     useEffect(() => {
         const token = cookie.load('token');
         if (!token) return;
@@ -61,7 +53,23 @@ const Checkout = () => {
             .catch(() => setCustomerProfile(null));
     }, []);
 
-    const total = cartItems.reduce((sum, x) => sum + (x.totalPrice || 0), 0);
+    const total = cartState.total;
+
+    const handlePayment = async () => {
+        try {
+
+            alert("Thanh toán thành công! Đơn đặt phòng đã được tạo.");
+        
+            cartDispatch({ type: "reset" });
+            
+            const cartKey = user ? `cart_${user.id}` : 'cart_guest';
+            cookie.remove(cartKey);
+
+            navigate('/');
+        } catch (error) {
+            alert("Có lỗi xảy ra khi thanh toán. Vui lòng thử lại.");
+        }
+    };
 
     return (
         <div className="container my-4">
@@ -74,7 +82,7 @@ const Checkout = () => {
                 </div>
             </div>
 
-            {cartItems.length === 0 ? (
+            {cartState.rooms.length === 0 ? (
                 <Card className="p-4 text-center">
                     <div>Chưa có phòng trong giỏ.</div>
                     <Link to="/booking" className="btn btn-primary mt-3">Quay lại tìm phòng</Link>
@@ -170,20 +178,22 @@ const Checkout = () => {
                     <Col md={4}>
                         <Card className="mb-3">
                             <Card.Body>
-                                {cartItems.map((r) => (
+                                {cartState.rooms.map((r) => (
                                     <div key={r.id + '_' + r.checkIn} className="border-bottom py-2">
-                                        <div className="d-flex justify-content-between">
-                                            <div>
+                                        <div className="d-flex justify-content-between align-items-start">
+                                            <div className="flex-grow-1 me-3">
                                                 <div className="fw-bold">{r.roomType}</div>
                                                 <small className="text-muted">{r.checkIn} → {r.checkOut} • {r.nights} đêm • {r.guests} khách</small>
                                             </div>
-                                            <div className="fw-bold text-primary">{r.totalPrice?.toLocaleString()} VND</div>
+                                            <div className="fw-bold text-primary text-nowrap text-end">
+                                                {(r.price * r.nights + (r.services?.reduce((sum, s) => sum + s.totalPrice, 0) || 0)).toLocaleString()} VND
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
                                 <div className="d-flex justify-content-between align-items-center mt-3">
                                     <span className="h6 mb-0">Tổng cộng</span>
-                                    <span className="h5 text-primary fw-bold mb-0">{total.toLocaleString()} VND</span>
+                                    <span className="h5 text-primary fw-bold mb-0 text-nowrap">{total.toLocaleString()} VND</span>
                                 </div>
                                 <div className="text-muted small">Đã bao gồm thuế và phí</div>
                                 <Button
@@ -191,7 +201,7 @@ const Checkout = () => {
                                     size="lg"
                                     className="w-100 mt-3"
                                     disabled={!agree}
-                                    onClick={() => alert("Giả lập: Thanh toán thành công!")}
+                                    onClick={handlePayment}
                                 >
                                     Thực hiện đặt phòng
                                 </Button>

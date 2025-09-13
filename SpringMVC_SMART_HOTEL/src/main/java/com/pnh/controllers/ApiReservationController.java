@@ -1,6 +1,8 @@
 package com.pnh.controllers;
 
 import com.pnh.pojo.Reservations;
+import com.pnh.pojo.ReservationRooms;
+import com.pnh.pojo.ServiceOrders;
 import com.pnh.services.ReservationService;
 import java.security.Principal;
 import java.util.List;
@@ -35,13 +37,24 @@ public class ApiReservationController {
 		return new ResponseEntity<>(this.reservationService.getReservations(params), HttpStatus.OK);
 	}
 
+
 	@GetMapping("/reservations/{id}")
-	public ResponseEntity<Reservations> retrieve(@PathVariable(value = "id") Long id) {
-		Reservations reservation = this.reservationService.getById(id);
-		if (reservation != null) {
-			return new ResponseEntity<>(reservation, HttpStatus.OK);
+	public ResponseEntity<?> retrieve(@PathVariable(value = "id") Long id) {
+		Reservations r = this.reservationService.getById(id);
+		if (r == null) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
-		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		
+		List<ReservationRooms> rooms = this.reservationService.getReservationRooms(id);
+		List<ServiceOrders> services = this.reservationService.getServiceOrders(id);
+		var invoice = this.reservationService.getInvoiceByReservationId(id);
+
+		var resp = new java.util.HashMap<String, Object>();
+		resp.put("reservation", r);
+		resp.put("rooms", rooms);
+		resp.put("services", services);
+		resp.put("invoice", invoice);
+		return new ResponseEntity<>(resp, HttpStatus.OK);
 	}
 
 	@PostMapping("/reservations")

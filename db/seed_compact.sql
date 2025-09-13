@@ -4,6 +4,23 @@
 
 USE smarthoteldb;
 
+-- Clear existing data (safe to re-run)
+SET FOREIGN_KEY_CHECKS=0;
+SET SQL_SAFE_UPDATES=0;
+TRUNCATE TABLE reviews;
+TRUNCATE TABLE payments;
+TRUNCATE TABLE invoices;
+TRUNCATE TABLE service_orders;
+TRUNCATE TABLE reservation_rooms;
+TRUNCATE TABLE reservations;
+TRUNCATE TABLE housekeeping_tasks;
+TRUNCATE TABLE rooms;
+TRUNCATE TABLE room_types;
+TRUNCATE TABLE services;
+TRUNCATE TABLE customer_profiles;
+TRUNCATE TABLE users;
+SET FOREIGN_KEY_CHECKS=1;
+
 INSERT INTO users (email, username, password, full_name, phone, role) VALUES
  ('admin@example.com','admin','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Admin','0900000000','ADMIN'),
  ('reception@example.com','reception','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Reception','0900000001','RECEPTION'),
@@ -51,64 +68,87 @@ INSERT INTO services (name, price, description, active) VALUES
 INSERT INTO reservations (customer_id, check_in, check_out, status, created_by)
 VALUES ((SELECT id FROM users WHERE username='alice'),'2025-01-18','2025-01-21','CHECKED_OUT',(SELECT id FROM users WHERE username='reception'));
 INSERT INTO reservation_rooms (reservation_id, room_id, price_per_night) VALUES
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), (SELECT id FROM rooms WHERE room_number='101'), 800000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), (SELECT id FROM rooms WHERE room_number='102'), 800000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), (SELECT id FROM rooms WHERE room_number='201'), 1200000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), (SELECT id FROM rooms WHERE room_number='202'), 1200000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), (SELECT id FROM rooms WHERE room_number='301'), 2200000);
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), (SELECT id FROM rooms WHERE room_number='101'), 800000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), (SELECT id FROM rooms WHERE room_number='102'), 800000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), (SELECT id FROM rooms WHERE room_number='201'), 1200000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), (SELECT id FROM rooms WHERE room_number='202'), 1200000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), (SELECT id FROM rooms WHERE room_number='301'), 2200000);
+-- Service orders: Breakfast cho 2 phòng, Airport Transfer
+INSERT INTO service_orders (reservation_id, service_id, qty, unit_price, amount) VALUES
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), (SELECT id FROM services WHERE name='Breakfast'), 3, 150000, 450000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), (SELECT id FROM services WHERE name='Airport Transfer'), 3, 300000, 900000);
+-- Tính tổng: (800k+800k+1200k+1200k+2200k)=6,200k/đêm → phòng: 18,600k; dịch vụ: (450k+900k)=1,350k → Tổng: 19,950k
 INSERT INTO invoices (reservation_id,total_amount,issued_at)
-VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), 9000000,'2025-01-21 09:30:00');
+VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), 19950000,'2025-01-21 09:30:00');
 INSERT INTO payments (reservation_id, amount, method, transaction_id, status, paid_at)
-VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), 9000000, 'CARD', 'TXA-2025-01', 'SUCCESS', '2025-01-21 09:35:00');
+VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='alice') AND check_in='2025-01-18'), 19950000, 'CARD', 'TXA-2025-01', 'SUCCESS', '2025-01-21 09:35:00');
 
 -- Tháng 2: 4 đêm x 6 phòng = 24
 INSERT INTO reservations VALUES (NULL,(SELECT id FROM users WHERE username='bob'),'2025-02-10','2025-02-14','CHECKED_OUT',(SELECT id FROM users WHERE username='reception'),NOW(),NULL);
 INSERT INTO reservation_rooms (reservation_id, room_id, price_per_night) VALUES
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), (SELECT id FROM rooms WHERE room_number='101'), 800000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), (SELECT id FROM rooms WHERE room_number='103'), 800000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), (SELECT id FROM rooms WHERE room_number='104'), 800000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), (SELECT id FROM rooms WHERE room_number='203'), 1200000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), (SELECT id FROM rooms WHERE room_number='301'), 2200000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), (SELECT id FROM rooms WHERE room_number='302'), 2200000);
-INSERT INTO invoices VALUES (NULL,(SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), 15000000,'2025-02-14 10:00:00');
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), (SELECT id FROM rooms WHERE room_number='101'), 800000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), (SELECT id FROM rooms WHERE room_number='103'), 800000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), (SELECT id FROM rooms WHERE room_number='104'), 800000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), (SELECT id FROM rooms WHERE room_number='203'), 1200000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), (SELECT id FROM rooms WHERE room_number='301'), 2200000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), (SELECT id FROM rooms WHERE room_number='302'), 2200000);
+-- Service orders: Spa cho 1 phòng
+INSERT INTO service_orders (reservation_id, service_id, qty, unit_price, amount) VALUES
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), (SELECT id FROM services WHERE name='Spa 60m'), 4, 400000, 1600000);
+-- Tính tổng: (800k+800k+800k+1200k+2200k+2200k)=8,000k/đêm → phòng: 32,000k; dịch vụ: 1,600k → Tổng: 33,600k
+INSERT INTO invoices VALUES (NULL,(SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), 25600000,'2025-02-14 10:00:00');
 INSERT INTO payments (reservation_id, amount, method, transaction_id, status, paid_at)
-VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), 15000000, 'CARD', 'TXB-2025-02', 'SUCCESS', '2025-02-14 10:05:00');
+VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-02-10'), 33600000, 'CARD', 'TXB-2025-02', 'SUCCESS', '2025-02-14 10:05:00');
 
 -- Tháng 3: 3 đêm x 4 phòng = 12
 INSERT INTO reservations VALUES (NULL,(SELECT id FROM users WHERE username='charlie'),'2025-03-05','2025-03-08','CHECKED_OUT',(SELECT id FROM users WHERE username='reception'),NOW(),NULL);
 INSERT INTO reservation_rooms (reservation_id, room_id, price_per_night) VALUES
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='charlie') AND check_in='2025-03-05'), (SELECT id FROM rooms WHERE room_number='102'), 800000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='charlie') AND check_in='2025-03-05'), (SELECT id FROM rooms WHERE room_number='105'), 800000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='charlie') AND check_in='2025-03-05'), (SELECT id FROM rooms WHERE room_number='201'), 1200000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='charlie') AND check_in='2025-03-05'), (SELECT id FROM rooms WHERE room_number='202'), 1200000);
-INSERT INTO invoices VALUES (NULL,(SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='charlie') AND check_in='2025-03-05'), 5600000,'2025-03-08 10:00:00');
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='charlie') AND check_in='2025-03-05'), (SELECT id FROM rooms WHERE room_number='102'), 800000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='charlie') AND check_in='2025-03-05'), (SELECT id FROM rooms WHERE room_number='105'), 800000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='charlie') AND check_in='2025-03-05'), (SELECT id FROM rooms WHERE room_number='201'), 1200000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='charlie') AND check_in='2025-03-05'), (SELECT id FROM rooms WHERE room_number='202'), 1200000);
+-- Service orders: Breakfast cho 4 phòng
+INSERT INTO service_orders (reservation_id, service_id, qty, unit_price, amount) VALUES
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='charlie') AND check_in='2025-03-05'), (SELECT id FROM services WHERE name='Breakfast'), 3, 150000, 450000);
+-- Tính tổng: (800k+800k+1200k+1200k)=4,000k/đêm → phòng: 12,000k; dịch vụ: 450k → Tổng: 12,450k
+INSERT INTO invoices VALUES (NULL,(SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='charlie') AND check_in='2025-03-05'), 13800000,'2025-03-08 10:00:00');
 INSERT INTO payments (reservation_id, amount, method, transaction_id, status, paid_at)
-VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='charlie') AND check_in='2025-03-05'), 5600000, 'CASH', 'TXC-2025-03', 'SUCCESS', '2025-03-08 10:10:00');
+VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='charlie') AND check_in='2025-03-05'), 12450000, 'CASH', 'TXC-2025-03', 'SUCCESS', '2025-03-08 10:10:00');
 
 -- Tháng 4: 2 đêm x 5 phòng = 10
 INSERT INTO reservations VALUES (NULL,(SELECT id FROM users WHERE username='diana'),'2025-04-15','2025-04-17','CHECKED_OUT',(SELECT id FROM users WHERE username='reception'),NOW(),NULL);
 INSERT INTO reservation_rooms (reservation_id, room_id, price_per_night) VALUES
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), (SELECT id FROM rooms WHERE room_number='101'), 800000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), (SELECT id FROM rooms WHERE room_number='103'), 800000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), (SELECT id FROM rooms WHERE room_number='104'), 800000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), (SELECT id FROM rooms WHERE room_number='203'), 1200000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), (SELECT id FROM rooms WHERE room_number='302'), 2200000);
-INSERT INTO invoices VALUES (NULL,(SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), 7400000,'2025-04-17 10:00:00');
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), (SELECT id FROM rooms WHERE room_number='101'), 800000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), (SELECT id FROM rooms WHERE room_number='103'), 800000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), (SELECT id FROM rooms WHERE room_number='104'), 800000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), (SELECT id FROM rooms WHERE room_number='203'), 1200000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), (SELECT id FROM rooms WHERE room_number='302'), 2200000);
+-- Service orders: Airport Transfer + Spa
+INSERT INTO service_orders (reservation_id, service_id, qty, unit_price, amount) VALUES
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), (SELECT id FROM services WHERE name='Airport Transfer'), 2, 300000, 600000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), (SELECT id FROM services WHERE name='Spa 60m'), 2, 400000, 800000);
+-- Tính tổng: (800k+800k+800k+1200k+2200k)=5,800k/đêm → phòng: 11,600k; dịch vụ: (600k+800k)=1,400k → Tổng: 13,000k
+INSERT INTO invoices VALUES (NULL,(SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), 13400000,'2025-04-17 10:00:00');
 INSERT INTO payments (reservation_id, amount, method, transaction_id, status, paid_at)
-VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), 7400000, 'CARD', 'TXD-2025-04', 'SUCCESS', '2025-04-17 10:05:00');
+VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='diana') AND check_in='2025-04-15'), 13000000, 'CARD', 'TXD-2025-04', 'SUCCESS', '2025-04-17 10:05:00');
 
 -- Tháng 5: 4 đêm x 6 phòng = 24
 INSERT INTO reservations VALUES (NULL,(SELECT id FROM users WHERE username='eric'),'2025-05-20','2025-05-24','CHECKED_OUT',(SELECT id FROM users WHERE username='reception'),NOW(),NULL);
 INSERT INTO reservation_rooms (reservation_id, room_id, price_per_night) VALUES
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), (SELECT id FROM rooms WHERE room_number='101'), 800000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), (SELECT id FROM rooms WHERE room_number='102'), 800000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), (SELECT id FROM rooms WHERE room_number='104'), 800000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), (SELECT id FROM rooms WHERE room_number='201'), 1200000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), (SELECT id FROM rooms WHERE room_number='203'), 1200000),
- ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), (SELECT id FROM rooms WHERE room_number='301'), 2200000);
-INSERT INTO invoices VALUES (NULL,(SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), 15200000,'2025-05-24 10:00:00');
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), (SELECT id FROM rooms WHERE room_number='101'), 800000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), (SELECT id FROM rooms WHERE room_number='102'), 800000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), (SELECT id FROM rooms WHERE room_number='104'), 800000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), (SELECT id FROM rooms WHERE room_number='201'), 1200000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), (SELECT id FROM rooms WHERE room_number='203'), 1200000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), (SELECT id FROM rooms WHERE room_number='301'), 2200000);
+-- Service orders: Breakfast cho 6 phòng + Airport Transfer
+INSERT INTO service_orders (reservation_id, service_id, qty, unit_price, amount) VALUES
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), (SELECT id FROM services WHERE name='Breakfast'), 4, 150000, 600000),
+((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), (SELECT id FROM services WHERE name='Airport Transfer'), 4, 300000, 1200000);
+-- Tính tổng: (800k+800k+800k+1200k+1200k+2200k)=7,000k/đêm → phòng: 28,000k; dịch vụ: (600k+1,200k)=1,800k → Tổng: 29,800k
+INSERT INTO invoices VALUES (NULL,(SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), 28800000,'2025-05-24 10:00:00');
 INSERT INTO payments (reservation_id, amount, method, transaction_id, status, paid_at)
-VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), 15200000, 'WALLET', 'TXE-2025-05', 'SUCCESS', '2025-05-24 10:02:00');
+VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='eric') AND check_in='2025-05-20'), 29800000, 'WALLET', 'TXE-2025-05', 'SUCCESS', '2025-05-24 10:02:00');
 
 -- Tháng 6: 3 đêm x 5 phòng = 15
 INSERT INTO reservations VALUES (NULL,(SELECT id FROM users WHERE username='alice'),'2025-06-10','2025-06-13','CHECKED_OUT',(SELECT id FROM users WHERE username='reception'),NOW(),NULL);
@@ -196,14 +236,35 @@ INSERT INTO invoices VALUES (NULL,(SELECT id FROM reservations WHERE customer_id
 INSERT INTO payments (reservation_id, amount, method, transaction_id, status, paid_at)
 VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-12-24'), 19000000, 'CARD', 'TXL-2025-12', 'SUCCESS', '2025-12-29 10:05:00');
 
+-- Housekeeping tasks cho các phòng đã checkout
+INSERT INTO housekeeping_tasks (room_id, task, status, assignee_id, created_at, updated_at) VALUES
+-- Tháng 1: Phòng 101, 102, 201, 202, 301
+((SELECT id FROM rooms WHERE room_number='101'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-01-21 10:00:00', '2025-01-21 11:30:00'),
+((SELECT id FROM rooms WHERE room_number='102'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-01-21 10:00:00', '2025-01-21 11:45:00'),
+((SELECT id FROM rooms WHERE room_number='201'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-01-21 10:00:00', '2025-01-21 12:00:00'),
+((SELECT id FROM rooms WHERE room_number='202'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-01-21 10:00:00', '2025-01-21 12:15:00'),
+((SELECT id FROM rooms WHERE room_number='301'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-01-21 10:00:00', '2025-01-21 12:30:00'),
+
+-- Tháng 2: Phòng 101, 103, 104, 203, 301, 302
+((SELECT id FROM rooms WHERE room_number='101'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-02-14 10:00:00', '2025-02-14 11:30:00'),
+((SELECT id FROM rooms WHERE room_number='103'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-02-14 10:00:00', '2025-02-14 11:45:00'),
+((SELECT id FROM rooms WHERE room_number='104'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-02-14 10:00:00', '2025-02-14 12:00:00'),
+((SELECT id FROM rooms WHERE room_number='203'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-02-14 10:00:00', '2025-02-14 12:15:00'),
+((SELECT id FROM rooms WHERE room_number='301'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-02-14 10:00:00', '2025-02-14 12:30:00'),
+((SELECT id FROM rooms WHERE room_number='302'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-02-14 10:00:00', '2025-02-14 12:45:00'),
+
+-- Maintenance tasks
+((SELECT id FROM rooms WHERE room_number='101'), 'Bảo trì điều hòa', 'PENDING', (SELECT id FROM users WHERE username='reception'), '2025-01-25 09:00:00', NULL),
+((SELECT id FROM rooms WHERE room_number='201'), 'Kiểm tra hệ thống điện', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-02-01 09:00:00', '2025-02-01 10:30:00');
+
 -- Một vài review
 INSERT INTO reviews (reservation_id, rating, comment, visible, created_at) VALUES
- ((SELECT id FROM reservations WHERE check_in='2025-01-18'),5,'Phòng sạch sẽ, nhân viên thân thiện',TRUE,'2025-01-21 13:00:00'),
- ((SELECT id FROM reservations WHERE check_in='2025-02-10'),4,'Vị trí tốt, giá hợp lý',TRUE,'2025-02-14 12:00:00'),
- ((SELECT id FROM reservations WHERE check_in='2025-03-05'),4,'Yên tĩnh, phù hợp công tác',TRUE,'2025-03-08 12:00:00'),
- ((SELECT id FROM reservations WHERE check_in='2025-05-20'),5,'Dịch vụ tuyệt vời',TRUE,'2025-05-24 12:00:00'),
- ((SELECT id FROM reservations WHERE check_in='2025-07-05'),4,'Bữa sáng ngon',TRUE,'2025-07-10 12:00:00'),
- ((SELECT id FROM reservations WHERE check_in='2025-08-20'),5,'Rất hài lòng',TRUE,'2025-08-23 12:00:00'),
- ((SELECT id FROM reservations WHERE check_in='2025-12-24'),5,'Trải nghiệm cuối năm tuyệt vời',TRUE,'2025-12-29 12:00:00');
+((SELECT id FROM reservations WHERE check_in='2025-01-18'),5,'Phòng sạch sẽ, nhân viên thân thiện',TRUE,'2025-01-21 13:00:00'),
+((SELECT id FROM reservations WHERE check_in='2025-02-10'),4,'Vị trí tốt, giá hợp lý',TRUE,'2025-02-14 12:00:00'),
+((SELECT id FROM reservations WHERE check_in='2025-03-05'),4,'Yên tĩnh, phù hợp công tác',TRUE,'2025-03-08 12:00:00'),
+((SELECT id FROM reservations WHERE check_in='2025-05-20'),5,'Dịch vụ tuyệt vời',TRUE,'2025-05-24 12:00:00'),
+((SELECT id FROM reservations WHERE check_in='2025-07-05'),4,'Bữa sáng ngon',TRUE,'2025-07-10 12:00:00'),
+((SELECT id FROM reservations WHERE check_in='2025-08-20'),5,'Rất hài lòng',TRUE,'2025-08-23 12:00:00'),
+((SELECT id FROM reservations WHERE check_in='2025-12-24'),5,'Trải nghiệm cuối năm tuyệt vời',TRUE,'2025-12-29 12:00:00');
 
 

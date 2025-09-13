@@ -1,8 +1,8 @@
 import { useContext, useEffect, useState } from "react";
-import { Badge, Button, Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
+import { Button, Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import Apis, { endpoints } from "../../configs/Api";
-import { MyCartContext,MyUserContext } from "../../configs/MyContexts";
+import { MyUserContext } from "../../configs/MyContexts";
 
 const Header = () => {
     const [roomTypes, setRoomTypes] = useState([]);
@@ -59,7 +59,7 @@ const Header = () => {
                             <Link className="nav-link text-success" to="/register">Đăng ký</Link>
                             <Link className="nav-link text-danger" to="/login">Đăng nhập</Link>
                         </>:<>
-                            <Link className="nav-link text-success" to="/">Chào {user.username}</Link>
+                            <Link className="nav-link text-success" to="/profile">Chào {user.username}</Link>
                             <Button variant="danger"onClick={() => dispatch({"type": "logout"})}>Đăng xuất</Button>
                         </>}
                                                     
