@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import static com.pnh.utils.HmacUtil.hmacSHA512;
-
+import java.math.BigDecimal;
 
 /**
  *
@@ -40,6 +40,7 @@ import static com.pnh.utils.HmacUtil.hmacSHA512;
 @RequestMapping("/api")
 @CrossOrigin
 public class ApiPaymentController {
+
     @Autowired
     private PaymentService paymentService;
 
@@ -50,7 +51,6 @@ public class ApiPaymentController {
     private String vnpayHashSecret;
     @Value("${frontend.baseUrl}")
     private String frontendBaseUrl;
-
 
     @PostMapping("/process")
     public ResponseEntity<?> processPayment(@RequestBody Map<String, Object> paymentRequest) {
@@ -100,8 +100,8 @@ public class ApiPaymentController {
 
             paymentService.updatePaymentStatus(savedPayment.getId(), "PENDING");
 
-            String successUrl = frontendBaseUrl + "/payment/result?success=true&method=" + paymentMethod +
-                    "&orderId=" + savedPayment.getId() + (amount != null ? "&amount=" + amount : "");
+            String successUrl = frontendBaseUrl + "/thankyou/result?success=true&method=" + paymentMethod
+                    + "&orderId=" + savedPayment.getId() + (amount != null ? "&amount=" + amount : "");
 
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "success", true,
@@ -128,7 +128,7 @@ public class ApiPaymentController {
                     "success", isSuccess,
                     "transactionId", transactionId,
                     "message", isSuccess ? "Thanh toán đã được xác nhận"
-                                         : "Thanh toán chưa hoàn tất hoặc không tồn tại"
+                            : "Thanh toán chưa hoàn tất hoặc không tồn tại"
             ));
 
         } catch (Exception e) {
@@ -139,35 +139,43 @@ public class ApiPaymentController {
         }
     }
 
-    @PostMapping("/callback/momo")
+    @RequestMapping(value = "/callback/momo")
     public ResponseEntity<?> momoCallback(@RequestBody Map<String, String> callbackData) {
-        try {
-            String orderId = callbackData.get("orderId");
-            String resultCode = callbackData.get("resultCode");
-            String transId = callbackData.get("transId");
+    try {
+        String orderId = callbackData.get("orderId");
+        String resultCode = callbackData.get("resultCode");
+        String transId = callbackData.get("transId");
+        String extraData = callbackData.get("extraData"); // nếu bạn dùng extraData để lưu paymentId
 
-            Long paymentId = Long.parseLong(orderId);
-            Payments payment = paymentService.getPaymentById(paymentId);
-
-            if (payment != null) {
-                payment.setTransactionId(transId);
-                if ("0".equals(resultCode)) {
-                    payment.setStatus("SUCCESS");
-                    payment.setPaidAt(new Date());
-                    Reservations r = payment.getReservationId();
-                    if (r != null) reservationService.updateStatus(r.getId(), "CONFIRMED");
-                } else {
-                    payment.setStatus("FAILED");
-                }
-                paymentService.updatePayment(payment);
-            }
-
-            return ResponseEntity.ok("IPN received");
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("ERROR");
+        if (extraData == null) {
+            return ResponseEntity.badRequest().body("Missing extraData parameter");
         }
+
+        Long paymentId = Long.parseLong(extraData);
+        Payments payment = paymentService.getPaymentById(paymentId);
+
+        if (payment != null) {
+            payment.setTransactionId(transId);
+            if ("0".equals(resultCode)) {
+                payment.setStatus("SUCCESS");
+                payment.setPaidAt(new Date());
+                Reservations r = payment.getReservationId();
+                if (r != null) {
+                    reservationService.updateStatus(r.getId(), "CONFIRMED");
+                }
+            } else {
+                payment.setStatus("FAILED");
+            }
+            paymentService.updatePayment(payment);
+        }
+
+        return ResponseEntity.ok("IPN received");
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("ERROR");
     }
+}
 
     @GetMapping("/callback/momo/guest")
     public ResponseEntity<?> momoReturn(@RequestParam Map<String, String> params) {
@@ -178,13 +186,19 @@ public class ApiPaymentController {
             Long paymentId = Long.parseLong(orderId);
             Payments payment = paymentService.getPaymentById(paymentId);
             Long reservationId = payment != null && payment.getReservationId() != null ? payment.getReservationId().getId() : null;
-            String redirectUrl = frontendBaseUrl + "/reservations/" + (reservationId != null ? reservationId : "") + "?payment=" + (success ? "success" : "failed");
+            BigDecimal amount = payment != null ? payment.getAmount() : null;
+            String redirectUrl = frontendBaseUrl + "/thankyou/result"
+                    + "?success=" + success
+                    + "&method=MOMO"
+                    + "&orderId=" + paymentId
+                    + (amount != null ? "&amount=" + amount : "");
             return ResponseEntity.status(HttpStatus.FOUND).header("Location", redirectUrl).build();
         } catch (Exception e) {
-            String fallback = frontendBaseUrl + "/payment/result?success=" + success + "&method=MOMO&orderId=" + orderId;
+            String fallback = frontendBaseUrl + "/thankyou/result?success=" + success + "&method=MOMO&orderId=" + orderId;
             return ResponseEntity.status(HttpStatus.FOUND).header("Location", fallback).build();
         }
     }
+
     @RequestMapping(value = "/callback/vnpay", method = {RequestMethod.GET, RequestMethod.POST})
     public ResponseEntity<?> vnpayCallback(@RequestParam Map<String, String> callbackData) {
         try {
@@ -206,7 +220,9 @@ public class ApiPaymentController {
                     payment.setStatus("SUCCESS");
                     payment.setPaidAt(new Date());
                     Reservations r = payment.getReservationId();
-                    if (r != null) reservationService.updateStatus(r.getId(), "CONFIRMED");
+                    if (r != null) {
+                        reservationService.updateStatus(r.getId(), "CONFIRMED");
+                    }
                 } else {
                     payment.setStatus("FAILED");
                 }
@@ -215,7 +231,15 @@ public class ApiPaymentController {
 
             boolean success = "00".equals(vnp_ResponseCode);
             Long reservationId = payment != null && payment.getReservationId() != null ? payment.getReservationId().getId() : null;
-            String redirectUrl = frontendBaseUrl + "/reservations/" + (reservationId != null ? reservationId : "") + "?payment=" + (success ? "success" : "failed");
+            BigDecimal amount = payment != null ? payment.getAmount() : null;
+            String paymentMethod = "VNPAY";
+
+            String redirectUrl = frontendBaseUrl + "/thankyou/result"
+                    + "?success=" + success
+                    + "&method=" + paymentMethod
+                    + (reservationId != null ? "&orderId=" + reservationId : "")
+                    + (amount != null ? "&amount=" + amount.longValue() : "");
+
             return ResponseEntity.status(HttpStatus.FOUND).header("Location", redirectUrl).build();
 
         } catch (Exception e) {
@@ -223,11 +247,12 @@ public class ApiPaymentController {
         }
     }
 
-
     private boolean verifyVNPaySignature(Map<String, String> callbackData) {
         try {
             String vnp_SecureHash = callbackData.get("vnp_SecureHash");
-            if (vnp_SecureHash == null) return false;
+            if (vnp_SecureHash == null) {
+                return false;
+            }
 
             Map<String, String> fields = new HashMap<>(callbackData);
             fields.remove("vnp_SecureHash");
@@ -242,7 +267,7 @@ public class ApiPaymentController {
                 String value = fields.get(key);
                 if (value != null && !value.isEmpty()) {
                     sb.append(key).append("=")
-                      .append(URLEncoder.encode(value, StandardCharsets.US_ASCII));
+                            .append(URLEncoder.encode(value, StandardCharsets.US_ASCII));
                     if (i < fieldNames.size() - 1) {
                         sb.append("&");
                     }
@@ -256,5 +281,5 @@ public class ApiPaymentController {
             return false;
         }
     }
-}
 
+}

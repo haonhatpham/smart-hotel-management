@@ -9,8 +9,6 @@ export const endpoints = {
     'reservations': '/reservations',
     'payment-process': '/process',
     'payment-status': '/status',
-    'payment-callback-momo': '/callback/momo',
-    'payment-callback-vnpay': '/callback/vnpay',
     'register': '/users',
     'login': '/login',
     'profile': '/secure/profile',

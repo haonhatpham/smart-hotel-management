@@ -2,6 +2,7 @@ package com.pnh.controllers;
 
 import com.pnh.pojo.Reservations;
 import com.pnh.services.ReservationService;
+import com.pnh.services.UserService;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,9 @@ public class ApiReservationController {
 
 	@Autowired
 	private ReservationService reservationService;
+
+	@Autowired
+	private UserService userService;
 
 	@GetMapping("/reservations")
 	public ResponseEntity<List<Reservations>> list(@RequestParam Map<String, String> params) {
