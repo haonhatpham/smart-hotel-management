@@ -4,6 +4,8 @@
  */
 package com.pnh.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,6 +29,7 @@ import java.util.Date;
  * @author ADMIN
  */
 @Entity
+@JsonIgnoreProperties({"reservationId"})
 @Table(name = "invoices")
 @NamedQueries({
     @NamedQuery(name = "Invoices.findAll", query = "SELECT i FROM Invoices i"),

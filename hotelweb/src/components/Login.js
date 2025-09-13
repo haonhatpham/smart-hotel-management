@@ -17,7 +17,7 @@ const Login = () => {
         type: "password"
     }];
 
-    const [user, setUser] = useState({ username: '', password: '' });
+    const [user, setUser] = useState({});
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState();
     const nav = useNavigate();
@@ -40,12 +40,10 @@ const Login = () => {
                 ...user
             });
             console.info(res.data)  
-            console.log("Token vừa nhận:", res.data.token);
             cookie.save('token', res.data.token);
 
             const u = await authApis().get(endpoints['profile']);
             console.info(u.data);
-            console.log("Header gọi profile:", authApis().defaults.headers);
 
             dispatch({
                 "type": "login",
@@ -58,12 +56,6 @@ const Login = () => {
                     const userCartKey = `cart_${u.data.id}`;
                     cookie.save(userCartKey, guestCart);
                     cookie.remove('cart_guest');
-                }
-                const legacyCart = cookie.load('cart');
-                if (legacyCart) {
-                    const userCartKey = `cart_${u.data.id}`;
-                    cookie.save(userCartKey, legacyCart);
-                    cookie.remove('cart');
                 }
             } catch (e) {}
 

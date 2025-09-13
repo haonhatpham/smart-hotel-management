@@ -13,6 +13,9 @@ import { MyCartReducer } from "./reducers/MyCartReducer";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Login from "./components/Login";
 import Register from "./components/Register";
+import Profile from "./components/Profile";
+import ReservationDetail from "./components/ReservationDetail";
+import ReviewForm from "./components/ReviewForm";
 import cookie from 'react-cookies'
 import { authApis, endpoints } from "./configs/Api";
 import Thankyou from "./components/thankyou";
@@ -20,7 +23,7 @@ import Thankyou from "./components/thankyou";
 
 const App = () => {
   const [user, dispatch] = useReducer(MyUsrReducer, null);
-  const [cartCounter, cartDispatch] = useReducer(MyCartReducer, 0);
+  const [cartState, cartDispatch] = useReducer(MyCartReducer, { rooms: [], total: 0 });
   const getUserFromToken = async () => {
   const token = cookie.load("token");
 
@@ -42,7 +45,7 @@ const App = () => {
 
   return (
     <MyUserContext.Provider value={[user, dispatch]}>
-      <MyCartContext.Provider value={[cartCounter, cartDispatch]}>
+      <MyCartContext.Provider value={[cartState, cartDispatch]}>
         <BrowserRouter>
           <Header />
 
@@ -53,7 +56,9 @@ const App = () => {
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/thankyou" element={<Thankyou />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/reservations/:id" element={<ReservationDetail />} />
+              <Route path="/reservations/:id/review" element={<ReviewForm />} />
               <Route path="/thankyou/result" element={<Thankyou />} />
             </Routes>
           </Container>
