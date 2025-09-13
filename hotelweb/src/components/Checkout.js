@@ -19,6 +19,68 @@ const Checkout = () => {
         note: ""
     });
     const navigate = useNavigate();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+
+    const handleCheckout = async () => {
+        if (!agree || isSubmitting) return;
+        setIsSubmitting(true);
+        try {
+            // Chuẩn bị dữ liệu đặt phòng
+            const reservationData = {
+                fullName: form.fullName,
+                email: form.email,
+                phone: form.phone,
+                address: form.address,
+                note: form.note,
+                checkIn: cartItems[0]?.checkIn,
+                checkOut: cartItems[0]?.checkOut,
+                createdAt: new Date().toISOString(),
+                customerId: user?.id,
+                status: "HELD",
+                rooms: cartItems.map(item => ({
+                    roomType: item.roomType,
+                    roomId: item.id,
+                    checkIn: item.checkIn,
+                    checkOut: item.checkOut,
+                    nights: item.nights,
+                    guests: item.guests,
+                    price: item.totalPrice
+                })),
+                totalAmount: total
+            };
+
+            // Tạo đơn đặt phòng
+            const res = await authApis().post(endpoints['reservations'], reservationData);
+            const reservation = res.data;
+            const reservationId = reservation.id || reservation.reservationId || reservation.ID;
+            if (!reservationId) throw new Error('Không lấy được mã đơn đặt phòng');
+
+            // Gọi API thanh toán nếu chọn bank_card hoặc momo
+            if (paymentMethod === 'bank_card' || paymentMethod === 'momo') {
+                const paymentRes = await authApis().post(endpoints['payment-process'], {
+                    reservationId,
+                    amount: total,
+                    paymentMethod: paymentMethod === 'bank_card' ? 'VNPAY' : 'MOMO'
+                });
+                const { paymentUrl, success, message } = paymentRes.data;
+                if (success && paymentUrl) {
+                    window.location.href = paymentUrl;
+                } else {
+                    alert(message || 'Không thể tạo thanh toán!');
+                    setIsSubmitting(false);
+                }
+            } else if (paymentMethod === 'pay_at_hotel') {
+                // Thanh toán tại quầy: chỉ xác nhận đặt phòng
+                alert('Đặt phòng thành công! Vui lòng thanh toán tại quầy khi nhận phòng.');
+                navigate('/thankyou');
+                setIsSubmitting(false);
+            }
+        } catch (err) {
+            alert('Có lỗi xảy ra: ' + (err?.response?.data?.message || err.message));
+            setIsSubmitting(false);
+        }
+    };
 
     useEffect(() => {
         const token = cookie.load('token');
@@ -55,7 +117,7 @@ const Checkout = () => {
             .then(res => {
                 setCustomerProfile(res.data);
                 if (res.data) {
-                    setForm(prev => ({...prev, address: res.data.address || ""}));
+                    setForm(prev => ({ ...prev, address: res.data.address || "" }));
                 }
             })
             .catch(() => setCustomerProfile(null));
@@ -91,7 +153,7 @@ const Checkout = () => {
                                             <Form.Group>
                                                 <Form.Label>Họ và tên</Form.Label>
                                                 <Form.Control value={form.fullName}
-                                                    onChange={e => setForm({...form, fullName: e.target.value})}
+                                                    onChange={e => setForm({ ...form, fullName: e.target.value })}
                                                     placeholder="VD: Nguyễn Văn A" />
                                             </Form.Group>
                                         </Col>
@@ -99,7 +161,7 @@ const Checkout = () => {
                                             <Form.Group>
                                                 <Form.Label>Số điện thoại</Form.Label>
                                                 <Form.Control value={form.phone}
-                                                    onChange={e => setForm({...form, phone: e.target.value})}
+                                                    onChange={e => setForm({ ...form, phone: e.target.value })}
                                                     placeholder="VD: 09xx..." />
                                             </Form.Group>
                                         </Col>
@@ -107,7 +169,7 @@ const Checkout = () => {
                                             <Form.Group>
                                                 <Form.Label>Email</Form.Label>
                                                 <Form.Control type="email" value={form.email}
-                                                    onChange={e => setForm({...form, email: e.target.value})}
+                                                    onChange={e => setForm({ ...form, email: e.target.value })}
                                                     placeholder="you@example.com" />
                                             </Form.Group>
                                         </Col>
@@ -115,7 +177,7 @@ const Checkout = () => {
                                             <Form.Group>
                                                 <Form.Label>Địa chỉ</Form.Label>
                                                 <Form.Control value={form.address}
-                                                    onChange={e => setForm({...form, address: e.target.value})} />
+                                                    onChange={e => setForm({ ...form, address: e.target.value })} />
                                             </Form.Group>
                                         </Col>
                                         <Col md={12}>
@@ -123,11 +185,11 @@ const Checkout = () => {
                                                 <Form.Label>Yêu cầu thêm</Form.Label>
                                                 <Form.Control as="textarea" rows={3}
                                                     value={form.note}
-                                                    onChange={e => setForm({...form, note: e.target.value})}
+                                                    onChange={e => setForm({ ...form, note: e.target.value })}
                                                     placeholder="Ghi chú cho khách sạn (nếu có)" />
                                             </Form.Group>
                                         </Col>
-                                
+
                                     </Row>
                                 </Form>
                             </Card.Body>
@@ -190,10 +252,10 @@ const Checkout = () => {
                                     variant="success"
                                     size="lg"
                                     className="w-100 mt-3"
-                                    disabled={!agree}
-                                    onClick={() => alert("Giả lập: Thanh toán thành công!")}
+                                    disabled={!agree || isSubmitting}
+                                    onClick={handleCheckout}
                                 >
-                                    Thực hiện đặt phòng
+                                    {isSubmitting ? 'Đang xử lý...' : 'Thực hiện đặt phòng'}
                                 </Button>
                             </Card.Body>
                         </Card>
@@ -205,5 +267,3 @@ const Checkout = () => {
 };
 
 export default Checkout;
-
-

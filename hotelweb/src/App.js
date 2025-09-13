@@ -15,6 +15,7 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import cookie from 'react-cookies'
 import { authApis, endpoints } from "./configs/Api";
+import Thankyou from "./components/thankyou";
 
 
 const App = () => {
@@ -52,6 +53,8 @@ const App = () => {
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/thankyou" element={<Thankyou />} />
+              <Route path="/thankyou/result" element={<Thankyou />} />
             </Routes>
           </Container>
 

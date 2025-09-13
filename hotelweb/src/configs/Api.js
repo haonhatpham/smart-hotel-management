@@ -7,6 +7,8 @@ export const endpoints = {
     'rooms': '/rooms',
     'services': '/services',
     'reservations': '/reservations',
+    'payment-process': '/process',
+    'payment-status': '/status',
     'register': '/users',
     'login': '/login',
     'profile': '/secure/profile',
