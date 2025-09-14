@@ -16,6 +16,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 /**
@@ -37,11 +40,20 @@ public class RoomServiceImpl implements RoomService {
             params = new java.util.HashMap<>();
         }
 
-        String userRole = params.get("userRole");
-        boolean isAdmin = "ADMIN".equals(userRole);
+        // Lấy role hiện tại từ Spring Security
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof UserDetails) {
+            UserDetails userDetails = (UserDetails) auth.getPrincipal();
+            String role = userDetails.getAuthorities().iterator().next().getAuthority();
+            
+            // Debug: In ra role để kiểm tra
+            System.out.println("Current user role: " + role);
 
-        if (!isAdmin && params.isEmpty()) {
-            params.put("status", "AVAILABLE");
+            if ("ROLE_CUSTOMER".equals(role)) {
+                params.put("status", "AVAILABLE");
+            } else {
+                params.remove("status"); 
+            }
         }
 
         return this.roomRepository.getRooms(params);
@@ -71,7 +83,7 @@ public class RoomServiceImpl implements RoomService {
                 }
             }
         }
-        
+
         if (room.getFile() != null && !room.getFile().isEmpty()) {
             try {
                 Map res = cloudinary.uploader().upload(room.getFile().getBytes(),
@@ -94,9 +106,9 @@ public class RoomServiceImpl implements RoomService {
         this.roomRepository.deleteRoom(id);
     }
 
-   @Override
-    public int updateStatusByIds(List<Long> ids, String status) {
-        return this.roomRepository.updateStatusByIds(ids, status);
+    @Override
+    public int updateStatusById(Long roomId, String status) {
+        return this.roomRepository.updateStatusById(roomId, status);
     }
 
     @Override

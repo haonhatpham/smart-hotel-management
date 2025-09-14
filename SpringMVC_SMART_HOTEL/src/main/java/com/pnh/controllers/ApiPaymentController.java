@@ -239,21 +239,21 @@ public class ApiPaymentController {
                     payment.setPaidAt(new Date());
                     Reservations r = payment.getReservationId();
                     if (r != null) {
-                        String email = r.getCustomerId().getEmail();
-
-                        // Lấy thông tin phòng và giờ nhận/trả phòng
-                        String roomDetails = r.getReservationRoomsSet().stream()
-                                .map(rr -> "Phòng " + rr.getRoomId().getRoomNumber()
-                                + " (Nhận: " + r.getCheckIn()
-                                + ", Trả: " + r.getCheckOut() + ")")
-                                .collect(Collectors.joining(", "));
-
-                        // Gửi mail
-                        String subject = "Thanh toán thành công";
-                        String body = "Bạn đã thanh toán " + payment.getAmount()
-                                + " cho: " + roomDetails;
-                        MailUtil.sendMail(email, subject, body);
-                        reservationService.updateStatus(r.getId(), "CONFIRMED");
+//                        String email = r.getCustomerId().getEmail();
+//
+//                        // Lấy thông tin phòng và giờ nhận/trả phòng
+//                        String roomDetails = r.getReservationRoomsSet().stream()
+//                                .map(rr -> "Phòng " + rr.getRoomId().getRoomNumber()
+//                                + " (Nhận: " + r.getCheckIn()
+//                                + ", Trả: " + r.getCheckOut() + ")")
+//                                .collect(Collectors.joining(", "));
+//
+//                        // Gửi mail
+//                        String subject = "Thanh toán thành công";
+//                        String body = "Bạn đã thanh toán " + payment.getAmount()
+//                                + " cho: " + roomDetails;
+//                        MailUtil.sendMail(email, subject, body);
+//                        reservationService.updateStatus(r.getId(), "CONFIRMED");
                     }
                 } else {
                     payment.setStatus("FAILED");

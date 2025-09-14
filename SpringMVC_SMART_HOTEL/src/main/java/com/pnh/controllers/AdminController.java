@@ -10,6 +10,7 @@ import com.pnh.services.RoomTypeService;
 import com.pnh.services.RoomService;
 import com.pnh.services.ServiceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("/manage")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     @Autowired
@@ -29,7 +31,6 @@ public class AdminController {
     @Autowired
     private ServiceService serviceService;
 
-    // ============ ROOMS ============
     @GetMapping("/rooms")
     public String manageRooms(Model model) {
         java.util.Map<String, String> params = new java.util.HashMap<>();
@@ -74,7 +75,6 @@ public class AdminController {
         return "redirect:/manage/rooms";
     }
 
-    // ============ ROOM TYPES ============
     @GetMapping("/room-types")
     public String listRoomTypes(Model model) {
         model.addAttribute("roomTypes", this.roomTypeService.getRoomTypes());
@@ -113,7 +113,6 @@ public class AdminController {
         return "redirect:/manage/room-types";
     }
 
-    // ============ SERVICES ============
     @GetMapping("/services")
     public String listServices(Model model) {
         model.addAttribute("services", this.serviceService.getServices());
