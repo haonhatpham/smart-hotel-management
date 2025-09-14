@@ -23,7 +23,7 @@ public interface RoomRepository {
 
     Rooms getRoomByNumber(String roomNumber);
 
-   
+    
     boolean existsByRoomNumber(String roomNumber);
 
     void addOrUpdate(Rooms r);

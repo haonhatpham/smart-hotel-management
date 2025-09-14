@@ -30,7 +30,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import static com.pnh.utils.HmacUtil.hmacSHA512;
+import com.pnh.utils.MailUtil;
 import java.math.BigDecimal;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -141,41 +143,41 @@ public class ApiPaymentController {
 
     @RequestMapping(value = "/callback/momo")
     public ResponseEntity<?> momoCallback(@RequestBody Map<String, String> callbackData) {
-    try {
-        String orderId = callbackData.get("orderId");
-        String resultCode = callbackData.get("resultCode");
-        String transId = callbackData.get("transId");
-        String extraData = callbackData.get("extraData"); // nếu bạn dùng extraData để lưu paymentId
+        try {
+            String orderId = callbackData.get("orderId");
+            String resultCode = callbackData.get("resultCode");
+            String transId = callbackData.get("transId");
+            String extraData = callbackData.get("extraData"); // nếu bạn dùng extraData để lưu paymentId
 
-        if (extraData == null) {
-            return ResponseEntity.badRequest().body("Missing extraData parameter");
-        }
-
-        Long paymentId = Long.parseLong(extraData);
-        Payments payment = paymentService.getPaymentById(paymentId);
-
-        if (payment != null) {
-            payment.setTransactionId(transId);
-            if ("0".equals(resultCode)) {
-                payment.setStatus("SUCCESS");
-                payment.setPaidAt(new Date());
-                Reservations r = payment.getReservationId();
-                if (r != null) {
-                    reservationService.updateStatus(r.getId(), "CONFIRMED");
-                }
-            } else {
-                payment.setStatus("FAILED");
+            if (extraData == null) {
+                return ResponseEntity.badRequest().body("Missing extraData parameter");
             }
-            paymentService.updatePayment(payment);
+
+            Long paymentId = Long.parseLong(extraData);
+            Payments payment = paymentService.getPaymentById(paymentId);
+
+            if (payment != null) {
+                payment.setTransactionId(transId);
+                if ("0".equals(resultCode)) {
+                    payment.setStatus("SUCCESS");
+                    payment.setPaidAt(new Date());
+                    Reservations r = payment.getReservationId();
+                    if (r != null) {
+                        reservationService.updateStatus(r.getId(), "CONFIRMED");
+                    }
+                } else {
+                    payment.setStatus("FAILED");
+                }
+                paymentService.updatePayment(payment);
+            }
+
+            return ResponseEntity.ok("IPN received");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("ERROR");
         }
-
-        return ResponseEntity.ok("IPN received");
-
-    } catch (Exception e) {
-        e.printStackTrace();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("ERROR");
     }
-}
 
     @GetMapping("/callback/momo/guest")
     public ResponseEntity<?> momoReturn(@RequestParam Map<String, String> params) {
@@ -221,6 +223,20 @@ public class ApiPaymentController {
                     payment.setPaidAt(new Date());
                     Reservations r = payment.getReservationId();
                     if (r != null) {
+                        String email = r.getCustomerId().getEmail();
+
+                        // Lấy thông tin phòng và giờ nhận/trả phòng
+                        String roomDetails = r.getReservationRoomsSet().stream()
+                                .map(rr -> "Phòng " + rr.getRoomId().getRoomNumber()
+                                + " (Nhận: " + r.getCheckIn()
+                                + ", Trả: " + r.getCheckOut() + ")")
+                                .collect(Collectors.joining(", "));
+
+                        // Gửi mail
+                        String subject = "Thanh toán thành công";
+                        String body = "Bạn đã thanh toán " + payment.getAmount()
+                                + " cho: " + roomDetails;
+                        MailUtil.sendMail(email, subject, body);
                         reservationService.updateStatus(r.getId(), "CONFIRMED");
                     }
                 } else {

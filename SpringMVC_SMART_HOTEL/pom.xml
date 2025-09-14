@@ -81,6 +81,11 @@
             <artifactId>nimbus-jose-jwt</artifactId>
             <version>10.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <version>3.2.2</version>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
     </dependencies>
     
     <build>
