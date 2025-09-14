@@ -12,9 +12,13 @@ import com.pnh.pojo.Reviews;
 import com.pnh.pojo.Rooms;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
@@ -42,8 +46,8 @@ public class StatsRepositoryImpl implements StatsRepository {
         Root<Invoices> root = q.from(Invoices.class);
 
         q.multiselect(
-            b.function(time, Integer.class, root.get("issuedAt")),
-            b.sum(root.get("totalAmount"))
+                b.function(time, Integer.class, root.get("issuedAt")),
+                b.sum(root.get("totalAmount"))
         );
 
         q.where(b.equal(b.function("YEAR", Integer.class, root.get("issuedAt")), year));
@@ -51,67 +55,90 @@ public class StatsRepositoryImpl implements StatsRepository {
 
         Query<Object[]> query = s.createQuery(q);
         List<Object[]> result = query.getResultList();
-                
+
         return result;
     }
 
     @Override
-    public List<Object[]> statsOccupancyByMonth(int year) {
-        Session s = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Object[]> q = b.createQuery(Object[].class);
-        Root<Reservations> root = q.from(Reservations.class);
-        // Join từng phòng trong đơn để đếm room-nights đúng = số đêm × số phòng
-        Join<Reservations, ReservationRooms> joinRooms = root.join("reservationRoomsSet", JoinType.INNER);
+    public List<Object[]> statsOccupancyByTime(String time, int year) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
 
-        q.multiselect(
-            b.function("MONTH", Integer.class, root.get("checkOut")),
-            b.sum(
-                b.function("DATEDIFF", Integer.class, root.get("checkOut"), root.get("checkIn"))
-            )
-        );
+        // Tổng số phòng
+        CriteriaQuery<Long> cqRooms = cb.createQuery(Long.class);
+        Root<Rooms> roomRoot = cqRooms.from(Rooms.class);
+        cqRooms.select(cb.count(roomRoot));
+        Long totalRooms = session.createQuery(cqRooms).getSingleResult();
 
-        q.where(
-            b.equal(b.function("YEAR", Integer.class, root.get("checkOut")), year),
-            root.get("status").in("CONFIRMED", "CHECKED_IN", "CHECKED_OUT")
-        );
-        q.groupBy(b.function("MONTH", Integer.class, root.get("checkOut")));
+        // Room-nights booked
+        CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
+        Root<ReservationRooms> rr = cq.from(ReservationRooms.class);
+        Join<ReservationRooms, Reservations> r = rr.join("reservationId", JoinType.INNER);
 
-        Query<Object[]> query = s.createQuery(q);
-        return query.getResultList();
+        // Lọc reservation theo trạng thái và năm
+        Predicate statusPredicate = r.get("status").in("CONFIRMED", "CHECKED_IN", "CHECKED_OUT");
+        Predicate yearPredicate = cb.equal(cb.function("YEAR", Integer.class, rr.get("checkOut")), year);
+        cq.where(cb.and(statusPredicate, yearPredicate));
+
+        // Số đêm và nhóm theo time
+        Expression<Integer> nights = cb.function("DATEDIFF", Integer.class, rr.get("checkOut"), rr.get("checkIn"));
+        Expression<Integer> periodExpr = cb.function(time, Integer.class, rr.get("checkOut"));
+
+        cq.multiselect(periodExpr, cb.sum(nights));
+        cq.groupBy(periodExpr);
+        cq.orderBy(cb.asc(periodExpr));
+
+        List<Object[]> results = session.createQuery(cq).getResultList();
+
+        // Tính occupancy %
+        List<Object[]> finalResult = new ArrayList<>();
+        for (Object[] row : results) {
+            int period = (Integer) row[0];
+            long bookedNights = ((Number) row[1]).longValue();
+
+            // Tính tổng số đêm có thể đặt được
+            long totalPossibleNights;
+            if ("MONTH".equalsIgnoreCase(time)) {
+                YearMonth ym = YearMonth.of(year, period);
+                totalPossibleNights = totalRooms * ym.lengthOfMonth();
+            } else if ("QUARTER".equalsIgnoreCase(time)) {
+                int daysInQuarter = 0;
+                for (int m = (period - 1) * 3 + 1; m <= (period * 3); m++) {
+                    daysInQuarter += YearMonth.of(year, m).lengthOfMonth();
+                }
+                totalPossibleNights = totalRooms * daysInQuarter;
+            } else { // YEAR
+                int daysInYear = YearMonth.of(year, 12).atEndOfMonth().getDayOfYear();
+                totalPossibleNights = totalRooms * daysInYear;
+            }
+
+            double occupancyRate = totalPossibleNights == 0 ? 0
+                    : (double) bookedNights / totalPossibleNights * 100.0;
+
+            finalResult.add(new Object[]{period, bookedNights, totalPossibleNights, occupancyRate});
+        }
+
+        return finalResult;
     }
 
     @Override
-    public List<Object[]> statsAvgRatingByMonth(int year) {
+    public List<Object[]> statsAvgRatingByTime(String time, int year) {
         Session s = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Object[]> q = b.createQuery(Object[].class);
-        Root<Reviews> root = q.from(Reviews.class);
+        CriteriaBuilder cb = s.getCriteriaBuilder();
+        CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
+        Root<Reviews> root = cq.from(Reviews.class);
 
-        q.multiselect(
-            b.function("MONTH", Integer.class, root.get("createdAt")),
-            b.avg(root.get("rating")),
-            b.count(root)
-        );
+        Expression<Integer> periodExpr = cb.function(time, Integer.class, root.get("createdAt"));
 
-        q.where(
-            b.equal(b.function("YEAR", Integer.class, root.get("createdAt")), year),
-            b.isTrue(root.get("visible"))
-        );
-        q.groupBy(b.function("MONTH", Integer.class, root.get("createdAt")));
+        cq.multiselect(periodExpr, cb.avg(root.get("rating")), cb.count(root));
+        cq.where(cb.and(
+                cb.equal(cb.function("YEAR", Integer.class, root.get("createdAt")), year),
+                cb.isTrue(root.get("visible"))
+        ));
+        cq.groupBy(periodExpr);
+        cq.orderBy(cb.asc(periodExpr));
 
-        Query<Object[]> query = s.createQuery(q);
-        return query.getResultList();
+        return s.createQuery(cq).getResultList();
     }
 
-    @Override
-    public long countAllRooms() {
-        Session s = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Long> q = b.createQuery(Long.class);
-        Root<Rooms> root = q.from(Rooms.class);
-        q.select(b.count(root))
-         .where(root.get("status").in("AVAILABLE", "OCCUPIED", "CLEANING"));
-        return s.createQuery(q).getSingleResult();
-    }
 }

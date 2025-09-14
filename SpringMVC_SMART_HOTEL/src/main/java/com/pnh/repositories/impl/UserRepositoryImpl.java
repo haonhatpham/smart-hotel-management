@@ -7,6 +7,9 @@ package com.pnh.repositories.impl;
 import com.pnh.pojo.Users;
 import com.pnh.pojo.CustomerProfiles;
 import com.pnh.repositories.UserRepository;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
@@ -68,8 +71,15 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public CustomerProfiles getCustomerProfileByUsername(String username) {
         Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createQuery("SELECT u.customerProfiles FROM Users u WHERE u.username = :username", CustomerProfiles.class);
-        q.setParameter("username", username);
-        return (CustomerProfiles) q.uniqueResult();
+        CriteriaBuilder cb = s.getCriteriaBuilder();
+        CriteriaQuery<CustomerProfiles> cq = cb.createQuery(CustomerProfiles.class);
+
+        Root<Users> root = cq.from(Users.class);
+
+        cq.select(root.get("customerProfile"))
+                .where(cb.equal(root.get("username"), username));
+
+        return s.createQuery(cq).uniqueResult();
     }
+
 }

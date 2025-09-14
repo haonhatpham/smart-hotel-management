@@ -11,8 +11,10 @@ import java.util.List;
  * @author ADMIN
  */
 public interface StatsService {
-    // View-ready data
-    List<java.util.Map<String, Object>> getRevenueChart(String time, int year, String period);
-    List<java.util.Map<String, Object>> getOccupancyPercentByMonth(int year, String time, String period);
-    List<java.util.Map<String, Object>> getAvgRatingByMonthChart(int year, String time, String period);
+
+    List<Object[]> statsRevenueByTime(String time, int year);
+
+    List<Object[]> statsOccupancyByTime(String time, int year);
+
+    List<Object[]> statsAvgRatingByTime(String time, int year);
 }

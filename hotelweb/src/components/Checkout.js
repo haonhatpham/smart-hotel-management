@@ -31,6 +31,7 @@ const Checkout = () => {
                 checkOut: cartState.rooms[0]?.checkOut,
                 customerId: user?.id, // Gửi chỉ ID của customer
                 status: "HELD",
+                createdBy: "2",
                 rooms: cartState.rooms.map(item => ({
                     roomId: item.id, // Gửi chỉ ID của room
                     checkIn: item.checkIn,
@@ -65,6 +66,14 @@ const Checkout = () => {
                 });
                 const { paymentUrl, success, message } = paymentRes.data;
                 if (success && paymentUrl) {
+                    // Xóa giỏ hàng trước khi chuyển hướng
+                    cartDispatch({ type: "reset" });
+                    const cartKey = user ? `cart_${user.id}` : 'cart_guest';
+                    cookie.remove(cartKey);
+                    
+                    // Đánh dấu đã hoàn thành đơn hàng
+                    sessionStorage.setItem('orderCompleted', 'true');
+                    
                     window.location.href = paymentUrl;
                 } else {
                     alert(message || 'Không thể tạo thanh toán!');
@@ -85,6 +94,9 @@ const Checkout = () => {
                     cartDispatch({ type: "reset" });
                     const cartKey = user ? `cart_${user.id}` : 'cart_guest';
                     cookie.remove(cartKey);
+                    
+                    // Đánh dấu đã hoàn thành đơn hàng
+                    sessionStorage.setItem('orderCompleted', 'true');
                     
                     navigate('/thankyou');
                 } else {

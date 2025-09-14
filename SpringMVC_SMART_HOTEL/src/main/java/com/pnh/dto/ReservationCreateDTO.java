@@ -11,6 +11,7 @@ public class ReservationCreateDTO {
     private Date checkOut;
     private Long customerId;
     private String status;
+    private Long createdBy;
     private List<ReservationRoomDTO> rooms;
     private List<ServiceOrderDTO> services;
 
@@ -18,11 +19,12 @@ public class ReservationCreateDTO {
     }
 
     public ReservationCreateDTO(Date checkIn, Date checkOut, Long customerId, String status, 
-                               List<ReservationRoomDTO> rooms, List<ServiceOrderDTO> services) {
+                               Long createdBy, List<ReservationRoomDTO> rooms, List<ServiceOrderDTO> services) {
         this.checkIn = checkIn;
         this.checkOut = checkOut;
         this.customerId = customerId;
         this.status = status;
+        this.createdBy = createdBy;
         this.rooms = rooms;
         this.services = services;
     }
@@ -59,6 +61,14 @@ public class ReservationCreateDTO {
         this.status = status;
     }
 
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
     public List<ReservationRoomDTO> getRooms() {
         return rooms;
     }
@@ -82,6 +92,7 @@ public class ReservationCreateDTO {
                 ", checkOut=" + checkOut +
                 ", customerId=" + customerId +
                 ", status='" + status + '\'' +
+                ", createdBy=" + createdBy +
                 ", rooms=" + rooms +
                 ", services=" + services +
                 '}';

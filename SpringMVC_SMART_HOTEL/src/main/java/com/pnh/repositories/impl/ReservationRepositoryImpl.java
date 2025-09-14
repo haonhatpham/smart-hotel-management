@@ -63,27 +63,45 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     @Override
     public List<ReservationRooms> getReservationRooms(Long reservationId) {
         Session s = this.factory.getObject().getCurrentSession();
-        return s.createQuery("FROM ReservationRooms rr WHERE rr.reservationId.id = :rid ORDER BY rr.id", ReservationRooms.class)
-                .setParameter("rid", reservationId)
-                .getResultList();
+        CriteriaBuilder cb = s.getCriteriaBuilder();
+        CriteriaQuery<ReservationRooms> cq = cb.createQuery(ReservationRooms.class);
+        Root<ReservationRooms> root = cq.from(ReservationRooms.class);
+
+        cq.select(root)
+                .where(cb.equal(root.get("reservationId").get("id"), reservationId))
+                .orderBy(cb.asc(root.get("id")));
+
+        return s.createQuery(cq).getResultList();
     }
 
     @Override
     public List<ServiceOrders> getServiceOrders(Long reservationId) {
         Session s = this.factory.getObject().getCurrentSession();
-        return s.createQuery("FROM ServiceOrders so WHERE so.reservationId.id = :rid ORDER BY so.orderedAt", ServiceOrders.class)
-                .setParameter("rid", reservationId)
-                .getResultList();
+        CriteriaBuilder cb = s.getCriteriaBuilder();
+        CriteriaQuery<ServiceOrders> cq = cb.createQuery(ServiceOrders.class);
+        Root<ServiceOrders> root = cq.from(ServiceOrders.class);
+
+        cq.select(root)
+                .where(cb.equal(root.get("reservationId").get("id"), reservationId))
+                .orderBy(cb.asc(root.get("orderedAt")));
+
+        return s.createQuery(cq).getResultList();
     }
 
     @Override
     public Invoices getInvoiceByReservationId(Long reservationId) {
         Session s = this.factory.getObject().getCurrentSession();
-        List<Invoices> list = s.createQuery("FROM com.pnh.pojo.Invoices i WHERE i.reservationId.id = :rid", Invoices.class)
-                .setParameter("rid", reservationId)
+        CriteriaBuilder cb = s.getCriteriaBuilder();
+        CriteriaQuery<Invoices> cq = cb.createQuery(Invoices.class);
+        Root<Invoices> root = cq.from(Invoices.class);
+
+        cq.select(root)
+                .where(cb.equal(root.get("reservationId").get("id"), reservationId));
+
+        List<Invoices> result = s.createQuery(cq)
                 .setMaxResults(1)
                 .getResultList();
-        return list.isEmpty() ? null : list.get(0);
+        return result.isEmpty() ? null : result.get(0);
     }
 
     @Override

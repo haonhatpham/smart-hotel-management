@@ -105,12 +105,12 @@
                             </a>
                         </li>
                          <li class="nav-item" sec:authorize="hasRole('RECEPTION')">
-                            <a class="nav-link text-danger" th:href="@{/booking_manage}">
+                            <a class="nav-link text-danger" th:href="@{reception/booking_manage}">
                                 <i class="fas fa-clipboard-check me-1"></i>Booking
                             </a>
                         </li>
                          <li class="nav-item" sec:authorize="hasRole('HOUSEKEEPING')">
-                            <a class="nav-link text-danger" th:href="@{/booking_manage}">
+                            <a class="nav-link text-danger" th:href="@{housekeeping/booking_manage}">
                                 <i class="fas fa-broom me-1"></i>Cleaning
                             </a>
                         </li>
