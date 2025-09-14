@@ -52,42 +52,24 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public Reservations addOrUpdate(Reservations reservation) {
-        System.out.println("[DEBUG] ReservationServiceImpl.addOrUpdate called");
-        System.out.println("[DEBUG] ReservationRoomsSet size: " + 
-            (reservation.getReservationRoomsSet() != null ? reservation.getReservationRoomsSet().size() : "null"));
-        System.out.println("[DEBUG] ServiceOrdersSet size: " + 
-            (reservation.getServiceOrdersSet() != null ? reservation.getServiceOrdersSet().size() : "null"));
-        
         if (reservation.getReservationRoomsSet() != null) {
-            System.out.println("[DEBUG] Processing ReservationRooms...");
             for (ReservationRooms rr : reservation.getReservationRoomsSet()) {
                 rr.setReservationId(reservation);
-                System.out.println("[DEBUG] Set ReservationRoom: roomId=" + rr.getRoomId() + ", price=" + rr.getPricePerNight());
             }
         }
-
-        if (reservation.getServiceOrdersSet() != null) {
-            System.out.println("[DEBUG] Processing ServiceOrders...");
+        if (reservation.getServiceOrdersSet() != null) { 
             for (ServiceOrders so : reservation.getServiceOrdersSet()) {
                 so.setReservationId(reservation);
-                System.out.println("[DEBUG] Set ServiceOrder: serviceId=" + so.getServiceId() + ", qty=" + so.getQty());
             }
         }
-
         Reservations result = this.reservationRepository.addOrUpdate(reservation);
-        System.out.println("[DEBUG] Saved reservation with ID: " + result.getId());
         return result;
     }
 
     @Override
     public Reservations createFromDTO(ReservationCreateDTO dto) {
-        System.out.println("[DEBUG] ReservationServiceImpl.createFromDTO called");
-        System.out.println("[DEBUG] DTO: " + dto);
-        
-        // Tạo reservation mới
         Reservations reservation = new Reservations();
         
-        // Tính check_in và check_out tổng quát từ các phòng
         Date earliestCheckIn = null;
         Date latestCheckOut = null;
         
@@ -199,20 +181,5 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public Invoices getInvoiceByReservationId(Long reservationId) {
         return this.reservationRepository.getInvoiceByReservationId(reservationId);
-    }
-
-    @Override
-    public void replaceReservationRooms(Long reservationId, List<ReservationRooms> items) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    @Override
-    public Invoices addOrUpdateInvoice(Invoices invoice) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    @Override
-    public boolean hasOverlapForAnyRoom(List<Long> roomIds, LocalDate checkIn, LocalDate checkOut, List<String> statuses) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }

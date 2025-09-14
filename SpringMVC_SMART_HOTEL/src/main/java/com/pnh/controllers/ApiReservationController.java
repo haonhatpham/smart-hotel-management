@@ -78,7 +78,6 @@ public class ApiReservationController {
         try {
             Reservations savedReservation = this.reservationService.createFromDTO(dto);
 
-            // Trả về response với ID rõ ràng
             Map<String, Object> response = new HashMap<>();
             response.put("id", savedReservation.getId());
             response.put("reservationId", savedReservation.getId());

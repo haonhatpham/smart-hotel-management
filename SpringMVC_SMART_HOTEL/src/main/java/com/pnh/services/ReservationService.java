@@ -15,10 +15,6 @@ public interface ReservationService {
     Reservations addOrUpdate(Reservations reservation);
     Reservations createFromDTO(ReservationCreateDTO dto);
     Reservations updateStatus(Long id, String status);
-    void replaceReservationRooms(Long reservationId, List<ReservationRooms> items);
-    Invoices addOrUpdateInvoice(Invoices invoice);
-    boolean hasOverlapForAnyRoom(List<Long> roomIds, LocalDate checkIn, LocalDate checkOut, List<String> statuses);
-
     List<Reservations> getReservations(Map<String, String> params);
 
     List<ReservationRooms> getReservationRooms(Long reservationId);

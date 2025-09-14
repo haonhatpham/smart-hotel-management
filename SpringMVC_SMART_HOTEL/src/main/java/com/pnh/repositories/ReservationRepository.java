@@ -21,15 +21,12 @@ public interface ReservationRepository {
     Reservations updateStatus(Long id, String status);
 
     List<ReservationRooms> getReservationRooms(Long reservationId);
-//    ReservationRooms addOrUpdateReservationRoom(ReservationRooms reservationRoom);
 
     Invoices getInvoiceByReservationId(Long reservationId);
 
     List<ServiceOrders> getServiceOrders(Long reservationId);
-//    ServiceOrders addOrUpdateServiceOrder(ServiceOrders serviceOrder);
 
     List<Reservations> getReservations(Map<String, String> params);
-
 
     ReservationRooms addOrUpdateReservationRoom(ReservationRooms reservationRoom);
     ServiceOrders addOrUpdateServiceOrder(ServiceOrders serviceOrder) ;
