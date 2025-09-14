@@ -51,13 +51,7 @@ public class StatsRepositoryImpl implements StatsRepository {
 
         Query<Object[]> query = s.createQuery(q);
         List<Object[]> result = query.getResultList();
-        
-        System.out.println("Time: " + time + ", Year: " + year);
-        for (Object[] row : result) {
-            System.out.println("Period: " + row[0] + ", Revenue: " + row[1]);
-        }
-        System.out.println("==================");
-        
+                
         return result;
     }
 

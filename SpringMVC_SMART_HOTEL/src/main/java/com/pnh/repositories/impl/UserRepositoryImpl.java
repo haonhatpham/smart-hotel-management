@@ -56,17 +56,12 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public boolean authenticate(String username, String password) {
-        System.out.println("[AUTH DEBUG] repo.authenticate username=" + username);
         Users u = this.getUserByUsername(username);
         if (u == null) {
-            System.out.println("[AUTH DEBUG] repo: user not found");
             return false;
         }
         String storedHash = u.getPassword();
-        System.out.println("[AUTH DEBUG] repo: stored hash=" + storedHash);
-        System.out.println("[AUTH DEBUG] repo: input password length=" + (password == null ? 0 : password.length()));
         boolean ok = this.passwordEncoder.matches(password, storedHash);
-        System.out.println("[AUTH DEBUG] repo: BCrypt.matches => " + ok);
         return ok;
     }
 

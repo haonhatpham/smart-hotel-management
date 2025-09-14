@@ -11,6 +11,7 @@ import com.pnh.pojo.Reservations;
 import com.pnh.repositories.RoomRepository;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -56,8 +57,8 @@ public class RoomRepositoryImpl implements RoomRepository {
             String kw = params.get("kw");
             if (kw != null && !kw.isEmpty()) {
                 Predicate kwPredicate = b.or(
-                    b.like(root.get("roomNumber"), String.format("%%%s%%", kw)),
-                    b.like(root.get("note"), String.format("%%%s%%", kw))
+                        b.like(root.get("roomNumber"), String.format("%%%s%%", kw)),
+                        b.like(root.get("note"), String.format("%%%s%%", kw))
                 );
                 predicates.add(kwPredicate);
             }
@@ -98,10 +99,10 @@ public class RoomRepositoryImpl implements RoomRepository {
                                 res.get("status").in("HELD", "CONFIRMED", "CHECKED_IN"),
                                 // OVERLAP condition: NOT( existing.checkOut <= desired.checkIn OR existing.checkIn >= desired.checkOut )
                                 b.not(
-                                    b.or(
-                                        b.lessThanOrEqualTo(res.get("checkOut"), LocalDate.parse(checkIn)),
-                                        b.greaterThanOrEqualTo(res.get("checkIn"), LocalDate.parse(checkOut))
-                                    )
+                                        b.or(
+                                                b.lessThanOrEqualTo(res.get("checkOut"), LocalDate.parse(checkIn)),
+                                                b.greaterThanOrEqualTo(res.get("checkIn"), LocalDate.parse(checkOut))
+                                        )
                                 )
                         ));
 
@@ -157,6 +158,7 @@ public class RoomRepositoryImpl implements RoomRepository {
         Session s = this.factory.getObject().getCurrentSession();
         return s.find(Rooms.class, id);
     }
+
     @Override
     public void addOrUpdate(Rooms r) {
         Session s = this.factory.getObject().getCurrentSession();
@@ -176,43 +178,64 @@ public class RoomRepositoryImpl implements RoomRepository {
         }
     }
 
-
     @Override
     public boolean existsByRoomNumber(String roomNumber) {
         Session s = this.factory.getObject().getCurrentSession();
-        Long c = s.createQuery("SELECT COUNT(r) FROM com.pnh.pojo.Rooms r WHERE r.roomNumber = :rn", Long.class)
-                .setParameter("rn", roomNumber)
-                .getSingleResult();
-        return c != null && c > 0;
+
+        CriteriaBuilder cb = s.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+
+        Root<Rooms> root = cq.from(Rooms.class);
+        cq.select(cb.count(root));
+        cq.where(cb.equal(root.get("roomNumber"), roomNumber));
+
+        Long count = s.createQuery(cq).getSingleResult();
+
+        return count != null && count > 0;
     }
+
     @Override
     public int updateStatusByIds(List<Long> ids, String status) {
         if (ids == null || ids.isEmpty()) {
             return 0;
         }
+
         Session s = this.factory.getObject().getCurrentSession();
-        String hql = "UPDATE com.pnh.pojo.Rooms r SET r.status = :st WHERE r.id IN (:ids)";
-        org.hibernate.query.Query<?> q = s.createQuery(hql)
-                .setParameter("st", status)
-                .setParameterList("ids", ids);
-        return q.executeUpdate();
+        CriteriaBuilder cb = s.getCriteriaBuilder();
+        CriteriaUpdate<Rooms> update = cb.createCriteriaUpdate(Rooms.class);
+
+        Root<Rooms> root = update.from(Rooms.class);
+        update.set(root.get("status"), status);
+        update.where(root.get("id").in(ids));
+
+        return s.createQuery(update).executeUpdate();
     }
 
     @Override
     public long countByStatus(String status) {
         Session s = this.factory.getObject().getCurrentSession();
-        Long count = s.createQuery("SELECT COUNT(r) FROM com.pnh.pojo.Rooms r WHERE r.status = :st", Long.class)
-                .setParameter("st", status)
-                .getSingleResult();
+        CriteriaBuilder cb = s.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+
+        Root<Rooms> root = cq.from(Rooms.class);
+        cq.select(cb.count(root));
+        cq.where(cb.equal(root.get("status"), status));
+
+        Long count = s.createQuery(cq).getSingleResult();
         return count != null ? count : 0L;
     }
 
     @Override
     public long countByRoomType(Long roomTypeId) {
         Session s = this.factory.getObject().getCurrentSession();
-        Long count = s.createQuery("SELECT COUNT(r) FROM com.pnh.pojo.Rooms r WHERE r.roomTypeId.id = :rt", Long.class)
-                .setParameter("rt", roomTypeId)
-                .getSingleResult();
+        CriteriaBuilder cb = s.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+
+        Root<Rooms> root = cq.from(Rooms.class);
+        cq.select(cb.count(root));
+        cq.where(cb.equal(root.get("roomTypeId").get("id"), roomTypeId));
+
+        Long count = s.createQuery(cq).getSingleResult();
         return count != null ? count : 0L;
     }
 
