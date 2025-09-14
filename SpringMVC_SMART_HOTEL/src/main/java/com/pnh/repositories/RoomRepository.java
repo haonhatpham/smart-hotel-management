@@ -21,7 +21,6 @@ public interface RoomRepository {
 
     Rooms getRoomById(Long id);
 
-   
     boolean existsByRoomNumber(String roomNumber);
 
     void addOrUpdate(Rooms r);

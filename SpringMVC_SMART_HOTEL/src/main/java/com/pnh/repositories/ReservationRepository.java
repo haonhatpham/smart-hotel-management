@@ -19,7 +19,6 @@ public interface ReservationRepository {
     Reservations getById(Long id);
     Reservations addOrUpdate(Reservations reservation);
     Reservations updateStatus(Long id, String status);
-
     List<ReservationRooms> getReservationRooms(Long reservationId);
 //    ReservationRooms addOrUpdateReservationRoom(ReservationRooms reservationRoom);
 

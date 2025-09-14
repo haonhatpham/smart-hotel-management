@@ -26,6 +26,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -248,5 +249,6 @@ public class Reservations implements Serializable {
     public String toString() {
         return "com.pnh.pojo.Reservations[ id=" + id + " ]";
     }
+
 
 }
