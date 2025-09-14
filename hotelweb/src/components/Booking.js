@@ -32,19 +32,23 @@ const Booking = () => {
     }, []);
 
     
+    // Sync giỏ hàng từ cookie chỉ một lần khi component mount
     useEffect(() => {
         const cartKey = user ? `cart_${user.id}` : 'cart_guest';
         const saved = cookie.load(cartKey) || {};
         const items = Object.values(saved);
         
-        // Dispatch từng item vào reducer để sync state
+        // Reset state trước khi sync để tránh duplicate
+        cartDispatch({ type: "reset" });
+        
+        // Thêm lại tất cả items từ cookie
         items.forEach(item => {
             cartDispatch({
                 type: "add",
                 payload: item
             });
         });
-    }, [user, cartDispatch]);
+    }, [user]); // Chỉ chạy khi user thay đổi
 
     useEffect(() => {
         if (searchParams.get('checkIn') && searchParams.get('checkOut')) {

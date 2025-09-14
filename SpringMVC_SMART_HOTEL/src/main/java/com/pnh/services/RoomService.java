@@ -19,19 +19,12 @@ public interface RoomService {
 
     Rooms getRoomById(Long id);
 
-    Rooms getRoomByNumber(String roomNumber);
-    
     boolean existsByRoomNumber(String roomNumber);
     
     void addOrUpdate(Rooms room);
     
     void deleteRoom(Long id);
 
-    boolean isRoomFree(Long roomId, LocalDate checkIn, LocalDate checkOut);
-    
-    List<Rooms> findByRoomTypeId(Long roomTypeId);
-
-    List<Rooms> findByStatus(String status);
 
     int updateStatusByIds(List<Long> ids, String status);
 

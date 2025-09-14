@@ -26,28 +26,28 @@ const Checkout = () => {
         if (!agree || isSubmitting) return;
         setIsSubmitting(true);
         try {
-            // Chuẩn bị dữ liệu đặt phòng
             const reservationData = {
-                fullName: form.fullName,
-                email: form.email,
-                phone: form.phone,
-                address: form.address,
-                note: form.note,
-                checkIn: cartItems[0]?.checkIn,
-                checkOut: cartItems[0]?.checkOut,
-                createdAt: new Date().toISOString(),
-                customerId: user?.id,
+                checkIn: cartState.rooms[0]?.checkIn,
+                checkOut: cartState.rooms[0]?.checkOut,
+                customerId: user?.id, // Gửi chỉ ID của customer
                 status: "HELD",
-                rooms: cartItems.map(item => ({
-                    roomType: item.roomType,
-                    roomId: item.id,
+                rooms: cartState.rooms.map(item => ({
+                    roomId: item.id, // Gửi chỉ ID của room
                     checkIn: item.checkIn,
                     checkOut: item.checkOut,
-                    nights: item.nights,
-                    guests: item.guests,
-                    price: item.totalPrice
+                    pricePerNight: item.price,
+                    notes: null
                 })),
-                totalAmount: total
+                services: cartState.rooms.flatMap(item => 
+                    item.services?.map(service => ({
+                        serviceId: service.id, 
+                        qty: service.quantity,
+                        unitPrice: service.price,
+                        amount: service.totalPrice,
+                        orderedAt: new Date().toISOString(),
+                        notes: "Service for room: " + item.roomType
+                    })) || []
+                )
             };
 
             // Tạo đơn đặt phòng
@@ -57,11 +57,11 @@ const Checkout = () => {
             if (!reservationId) throw new Error('Không lấy được mã đơn đặt phòng');
 
             // Gọi API thanh toán nếu chọn bank_card hoặc momo
-            if (paymentMethod === 'bank_card' || paymentMethod === 'momo') {
+            if (paymentMethod === 'bank_card' || paymentMethod === 'wallet') {
                 const paymentRes = await authApis().post(endpoints['payment-process'], {
                     reservationId,
                     amount: total,
-                    paymentMethod: paymentMethod === 'bank_card' ? 'VNPAY' : 'MOMO'
+                    paymentMethod: paymentMethod === 'bank_card' ? 'CARD' : 'WALLET'
                 });
                 const { paymentUrl, success, message } = paymentRes.data;
                 if (success && paymentUrl) {
@@ -71,9 +71,25 @@ const Checkout = () => {
                     setIsSubmitting(false);
                 }
             } else if (paymentMethod === 'pay_at_hotel') {
-                // Thanh toán tại quầy: chỉ xác nhận đặt phòng
-                alert('Đặt phòng thành công! Vui lòng thanh toán tại quầy khi nhận phòng.');
-                navigate('/thankyou');
+                // Thanh toán tại quầy: tạo payment với method = 'CASH'
+                const paymentRes = await authApis().post(endpoints['payment-process'], {
+                    reservationId,
+                    amount: total,
+                    paymentMethod: 'CASH'
+                });
+                
+                const { success, message } = paymentRes.data;
+                if (success) {
+                    alert(message || 'Đặt phòng thành công! Vui lòng thanh toán tại quầy khi nhận phòng.');
+
+                    cartDispatch({ type: "reset" });
+                    const cartKey = user ? `cart_${user.id}` : 'cart_guest';
+                    cookie.remove(cartKey);
+                    
+                    navigate('/thankyou');
+                } else {
+                    alert(message || 'Có lỗi xảy ra khi đặt phòng!');
+                }
                 setIsSubmitting(false);
             }
         } catch (err) {
@@ -117,21 +133,6 @@ const Checkout = () => {
 
     const total = cartState.total;
 
-    const handlePayment = async () => {
-        try {
-
-            alert("Thanh toán thành công! Đơn đặt phòng đã được tạo.");
-        
-            cartDispatch({ type: "reset" });
-            
-            const cartKey = user ? `cart_${user.id}` : 'cart_guest';
-            cookie.remove(cartKey);
-
-            navigate('/');
-        } catch (error) {
-            alert("Có lỗi xảy ra khi thanh toán. Vui lòng thử lại.");
-        }
-    };
 
     return (
         <div className="container my-4">
@@ -219,20 +220,23 @@ const Checkout = () => {
                                 <div className="mb-2 fw-bold">Phương thức thanh toán</div>
                                 <Form.Select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
                                     <option value="bank_card">Thẻ ngân hàng (Visa/Master/JCB/Napas)</option>
-                                    <option value="momo">Ví điện tử MoMo</option>
+                                    <option value="wallet">Ví điện tử MoMo</option>
                                     <option value="pay_at_hotel">Thanh toán trực tiếp tại quầy</option>
                                 </Form.Select>
                                 <div className="text-muted small mt-2">
                                     {paymentMethod === 'bank_card' && 'Thanh toán an toàn qua cổng thẻ nội địa/quốc tế.'}
-                                    {paymentMethod === 'momo' && 'Bạn sẽ được chuyển sang ứng dụng MoMo để hoàn tất.'}
+                                    {paymentMethod === 'wallet' && 'Bạn sẽ được chuyển sang ứng dụng MoMo để hoàn tất.'}
                                     {paymentMethod === 'pay_at_hotel' && 'Giữ phòng và thanh toán khi nhận phòng tại quầy.'}
                                 </div>
-                                <Form.Check className="mt-3"
-                                    type="checkbox"
-                                    label="Tôi đồng ý với điều khoản đặt phòng"
-                                    checked={agree}
-                                    onChange={e => setAgree(e.target.checked)}
-                                />
+                                <div className="mt-3">
+                                    <Form.Check 
+                                        type="checkbox"
+                                        id="agree-terms"
+                                        label="Tôi đồng ý với điều khoản đặt phòng"
+                                        checked={agree}
+                                        onChange={e => setAgree(e.target.checked)}
+                                    />
+                                </div>
                             </Card.Body>
                         </Card>
                     </Col>
@@ -246,6 +250,21 @@ const Checkout = () => {
                                             <div className="flex-grow-1 me-3">
                                                 <div className="fw-bold">{r.roomType}</div>
                                                 <small className="text-muted">{r.checkIn} → {r.checkOut} • {r.nights} đêm • {r.guests} khách</small>
+                                                
+                                                {/* Hiển thị dịch vụ đã chọn */}
+                                                {r.services && r.services.length > 0 && (
+                                                    <div className="mt-2">
+                                                        <small className="text-info fw-bold">Dịch vụ đi kèm:</small>
+                                                        <ul className="list-unstyled mt-1">
+                                                            {r.services.map(service => (
+                                                                <li key={service.id} className="small text-muted">
+                                                                    <i className="fas fa-check-circle text-success me-1"></i>
+                                                                    {service.name} x{service.quantity} (+{service.totalPrice?.toLocaleString()} VND)
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="fw-bold text-primary text-nowrap text-end">
                                                 {(r.price * r.nights + (r.services?.reduce((sum, s) => sum + s.totalPrice, 0) || 0)).toLocaleString()} VND

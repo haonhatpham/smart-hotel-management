@@ -53,7 +53,9 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     public Reservations updateStatus(Long id, String status) {
         Session s = this.factory.getObject().getCurrentSession();
         Reservations r = s.find(Reservations.class, id);
-        if (r == null) return null;
+        if (r == null) {
+            return null;
+        }
         r.setStatus(status);
         return (Reservations) s.merge(r);
     }
@@ -75,19 +77,6 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     }
 
     @Override
-    public void replaceReservationRooms(Long reservationId, List<ReservationRooms> items) {
-        Session s = this.factory.getObject().getCurrentSession();
-        s.createQuery("DELETE FROM ReservationRooms rr WHERE rr.reservationId.id = :rid")
-                .setParameter("rid", reservationId)
-                .executeUpdate();
-        if (items != null) {
-            for (ReservationRooms rr : items) {
-                s.persist(rr);
-            }
-        }
-    }
-
-    @Override
     public Invoices getInvoiceByReservationId(Long reservationId) {
         Session s = this.factory.getObject().getCurrentSession();
         List<Invoices> list = s.createQuery("FROM com.pnh.pojo.Invoices i WHERE i.reservationId.id = :rid", Invoices.class)
@@ -95,41 +84,6 @@ public class ReservationRepositoryImpl implements ReservationRepository {
                 .setMaxResults(1)
                 .getResultList();
         return list.isEmpty() ? null : list.get(0);
-    }
-
-    @Override
-    public Invoices addOrUpdateInvoice(Invoices invoice) {
-        Session s = this.factory.getObject().getCurrentSession();
-        if (invoice.getId() == null) {
-            s.persist(invoice);
-            return invoice;
-        }
-        return (Invoices) s.merge(invoice);
-    }
-
-    @Override
-    public boolean hasOverlapForAnyRoom(List<Long> roomIds, LocalDate checkIn, LocalDate checkOut, List<String> statuses) {
-        if (roomIds == null || roomIds.isEmpty()) return false;
-        Session s = this.factory.getObject().getCurrentSession();
-
-        CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Long> query = b.createQuery(Long.class);
-        Root<ReservationRooms> rr = query.from(ReservationRooms.class);
-        Join<ReservationRooms, Reservations> res = rr.join("reservationId");
-
-        List<Predicate> predicates = new ArrayList<>();
-        predicates.add(rr.get("roomId").get("id").in(roomIds));
-        if (statuses != null && !statuses.isEmpty()) {
-            predicates.add(res.get("status").in(statuses));
-        }
-        predicates.add(b.not(b.or(
-                b.lessThanOrEqualTo(res.get("checkOut"), checkOut),
-                b.greaterThanOrEqualTo(res.get("checkIn"), checkIn)
-        )));
-
-        query.select(b.count(rr)).where(b.and(predicates.toArray(new Predicate[0])));
-        Long count = s.createQuery(query).getSingleResult();
-        return count != null && count > 0;
     }
 
     @Override
@@ -179,4 +133,25 @@ public class ReservationRepositoryImpl implements ReservationRepository {
 
         return query.getResultList();
     }
+
+    @Override
+    public ReservationRooms addOrUpdateReservationRoom(ReservationRooms reservationRoom) {
+        Session s = this.factory.getObject().getCurrentSession();
+        if (reservationRoom.getId() == null) {
+            s.persist(reservationRoom);
+            return reservationRoom;
+        }
+        return (ReservationRooms) s.merge(reservationRoom);
+    }
+
+    @Override
+    public ServiceOrders addOrUpdateServiceOrder(ServiceOrders serviceOrder) {
+        Session s = this.factory.getObject().getCurrentSession();
+        if (serviceOrder.getId() == null) {
+            s.persist(serviceOrder);
+            return serviceOrder;
+        }
+        return (ServiceOrders) s.merge(serviceOrder);
+    }
+
 }

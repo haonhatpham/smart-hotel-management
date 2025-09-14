@@ -53,23 +53,25 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public Rooms getRoomByNumber(String roomNumber) {
-        return this.roomRepository.getRoomByNumber(roomNumber);
-    }
-
-    @Override
     public boolean existsByRoomNumber(String roomNumber) {
         return this.roomRepository.existsByRoomNumber(roomNumber);
     }
 
     @Override
     public void addOrUpdate(Rooms room) {
-        Rooms existingRoomByNumber = this.roomRepository.getRoomByNumber(room.getRoomNumber());
-        if (existingRoomByNumber != null && !existingRoomByNumber.getId().equals(room.getId())) {
-            throw new RuntimeException("Số phòng '" + room.getRoomNumber() + "' đã tồn tại!");
+        if (room.getId() == null) {
+            if (this.roomRepository.existsByRoomNumber(room.getRoomNumber())) {
+                throw new RuntimeException("Số phòng '" + room.getRoomNumber() + "' đã tồn tại!");
+            }
+        } else {
+            Rooms existingRoom = this.roomRepository.getRoomById(room.getId());
+            if (existingRoom != null && !existingRoom.getRoomNumber().equals(room.getRoomNumber())) {
+                if (this.roomRepository.existsByRoomNumber(room.getRoomNumber())) {
+                    throw new RuntimeException("Số phòng '" + room.getRoomNumber() + "' đã tồn tại!");
+                }
+            }
         }
         
-        // Nếu có file mới thì upload và cập nhật imageUrl
         if (room.getFile() != null && !room.getFile().isEmpty()) {
             try {
                 Map res = cloudinary.uploader().upload(room.getFile().getBytes(),
@@ -79,7 +81,6 @@ public class RoomServiceImpl implements RoomService {
                 Logger.getLogger(RoomServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else if (room.getId() != null) {
-            // Nếu không có file mới và đang update, giữ nguyên imageUrl cũ
             Rooms existingRoom = this.roomRepository.getRoomById(room.getId());
             if (existingRoom != null && existingRoom.getImageUrl() != null) {
                 room.setImageUrl(existingRoom.getImageUrl());
@@ -93,22 +94,7 @@ public class RoomServiceImpl implements RoomService {
         this.roomRepository.deleteRoom(id);
     }
 
-    @Override
-    public boolean isRoomFree(Long roomId, LocalDate checkIn, LocalDate checkOut) {
-        return this.roomRepository.isRoomFree(roomId, checkIn, checkOut);
-    }
-
-    @Override
-    public List<Rooms> findByRoomTypeId(Long roomTypeId) {
-        return this.roomRepository.findByRoomTypeId(roomTypeId);
-    }
-
-    @Override
-    public List<Rooms> findByStatus(String status) {
-        return this.roomRepository.findByStatus(status);
-    }
-
-    @Override
+   @Override
     public int updateStatusByIds(List<Long> ids, String status) {
         return this.roomRepository.updateStatusByIds(ids, status);
     }

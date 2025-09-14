@@ -157,16 +157,6 @@ public class RoomRepositoryImpl implements RoomRepository {
         Session s = this.factory.getObject().getCurrentSession();
         return s.find(Rooms.class, id);
     }
-
-    @Override
-    public Rooms getRoomByNumber(String roomNumber) {
-        Session s = this.factory.getObject().getCurrentSession();
-        return s.createQuery("FROM Rooms r WHERE r.roomNumber = :rn", Rooms.class)
-                .setParameter("rn", roomNumber)
-                .setMaxResults(1)
-                .uniqueResult();
-    }
-
     @Override
     public void addOrUpdate(Rooms r) {
         Session s = this.factory.getObject().getCurrentSession();
@@ -186,28 +176,6 @@ public class RoomRepositoryImpl implements RoomRepository {
         }
     }
 
-    @Override
-    public boolean isRoomFree(Long roomId, LocalDate checkIn, LocalDate checkOut) {
-        Session s = this.factory.getObject().getCurrentSession();
-        
-        CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Long> query = b.createQuery(Long.class);
-        Root<ReservationRooms> rr = query.from(ReservationRooms.class);
-        Join<ReservationRooms, Reservations> res = rr.join("reservation");
-        
-        query.select(b.count(rr))
-             .where(b.and(
-                 b.equal(rr.get("room").get("id"), roomId),
-                 res.get("status").in("HELD", "CONFIRMED", "CHECKED_IN"),
-                 b.not(b.or(
-                     b.lessThanOrEqualTo(res.get("checkOut"), checkIn),
-                     b.greaterThanOrEqualTo(res.get("checkIn"), checkOut)
-                 ))
-             ));
-        
-        Long count = s.createQuery(query).getSingleResult();
-        return count != null && count == 0;
-    }
 
     @Override
     public boolean existsByRoomNumber(String roomNumber) {
@@ -217,23 +185,6 @@ public class RoomRepositoryImpl implements RoomRepository {
                 .getSingleResult();
         return c != null && c > 0;
     }
-
-    @Override
-    public List<Rooms> findByRoomTypeId(Long roomTypeId) {
-        Session s = this.factory.getObject().getCurrentSession();
-        return s.createQuery("FROM com.pnh.pojo.Rooms r WHERE r.roomTypeId.id = :rt ORDER BY r.roomNumber", Rooms.class)
-                .setParameter("rt", roomTypeId)
-                .getResultList();
-    }
-
-    @Override
-    public List<Rooms> findByStatus(String status) {
-        Session s = this.factory.getObject().getCurrentSession();
-        return s.createQuery("FROM com.pnh.pojo.Rooms r WHERE r.status = :st ORDER BY r.roomNumber", Rooms.class)
-                .setParameter("st", status)
-                .getResultList();
-    }
-
     @Override
     public int updateStatusByIds(List<Long> ids, String status) {
         if (ids == null || ids.isEmpty()) {
