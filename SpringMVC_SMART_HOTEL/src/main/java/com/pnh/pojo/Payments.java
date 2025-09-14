@@ -4,6 +4,7 @@
  */
 package com.pnh.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -53,7 +54,7 @@ public class Payments implements Serializable {
     private BigDecimal amount;
     @Basic(optional = false)
     @NotNull
-    @Size(min = 1, max = 20)
+    @Size(min = 1, max = 6)
     @Column(name = "method")
     private String method;
     @Size(max = 100)
@@ -61,7 +62,7 @@ public class Payments implements Serializable {
     private String transactionId;
     @Basic(optional = false)
     @NotNull
-    @Size(min = 1, max = 20)
+    @Size(min = 1, max = 7)
     @Column(name = "status")
     private String status;
     @Column(name = "paid_at")

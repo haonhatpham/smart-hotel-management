@@ -61,8 +61,8 @@ public class Services implements Serializable {
     @NotNull
     @Column(name = "active")
     private boolean active;
-    @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "serviceId")
+    @JsonIgnore
     private Set<ServiceOrders> serviceOrdersSet;
 
     public Services() {

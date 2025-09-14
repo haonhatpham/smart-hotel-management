@@ -75,11 +75,13 @@ CREATE TABLE IF NOT EXISTS reservation_rooms (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   reservation_id BIGINT NOT NULL,
   room_id BIGINT NOT NULL,
+  check_in DATE NOT NULL,
+  check_out DATE NOT NULL,
   price_per_night DECIMAL(12,2) NOT NULL DEFAULT 0,
   notes TEXT,
   CONSTRAINT fk_rr_res FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE,
   CONSTRAINT fk_rr_room FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE RESTRICT,
-  CONSTRAINT uq_reservation_room UNIQUE (reservation_id, room_id)
+  CONSTRAINT uq_reservation_room_dates UNIQUE (reservation_id, room_id, check_in, check_out)
 ) ENGINE=InnoDB;
 CREATE INDEX idx_rr_res ON reservation_rooms(reservation_id);
 CREATE INDEX idx_rr_room ON reservation_rooms(room_id);
@@ -113,8 +115,7 @@ CREATE TABLE IF NOT EXISTS payments (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   reservation_id BIGINT NOT NULL,
   amount DECIMAL(12,2) NOT NULL, 
-  method VARCHAR(50) NOT NULL, 
-  method ENUM('CARD','WALLET','CASH','MOMO','VNPAY') NOT NULL,
+  method ENUM('CARD','WALLET','CASH') NOT NULL,
   transaction_id VARCHAR(100) NULL,
   status ENUM('SUCCESS','FAILED','PENDING') NOT NULL DEFAULT 'SUCCESS',
   paid_at TIMESTAMP NULL,

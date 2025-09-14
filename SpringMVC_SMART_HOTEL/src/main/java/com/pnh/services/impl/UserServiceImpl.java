@@ -43,6 +43,11 @@ public class UserServiceImpl implements UserService {
     public Users getUserByUsername(String username) {
         return this.userRepo.getUserByUsername(username);
     }
+
+    @Override
+    public Users getById(Long id) {
+        return this.userRepo.getById(id);
+    }
     
     
     //phương thức của UserDetailsService tự động gọi khi xác thực

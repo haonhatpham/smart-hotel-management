@@ -16,6 +16,7 @@ import java.util.Map;
 public interface UserRepository {
 
     public Users getUserByUsername(String username);
+    Users getById(Long id);
 
     Users addUser(Users u);
     boolean authenticate(String username, String password);

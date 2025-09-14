@@ -4,6 +4,7 @@
  */
 package com.pnh.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,10 +17,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  *
@@ -30,6 +34,8 @@ import java.math.BigDecimal;
 @NamedQueries({
     @NamedQuery(name = "ReservationRooms.findAll", query = "SELECT r FROM ReservationRooms r"),
     @NamedQuery(name = "ReservationRooms.findById", query = "SELECT r FROM ReservationRooms r WHERE r.id = :id"),
+    @NamedQuery(name = "ReservationRooms.findByCheckIn", query = "SELECT r FROM ReservationRooms r WHERE r.checkIn = :checkIn"),
+    @NamedQuery(name = "ReservationRooms.findByCheckOut", query = "SELECT r FROM ReservationRooms r WHERE r.checkOut = :checkOut"),
     @NamedQuery(name = "ReservationRooms.findByPricePerNight", query = "SELECT r FROM ReservationRooms r WHERE r.pricePerNight = :pricePerNight")})
 public class ReservationRooms implements Serializable {
 
@@ -39,6 +45,16 @@ public class ReservationRooms implements Serializable {
     @Basic(optional = false)
     @Column(name = "id")
     private Long id;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "check_in")
+    @Temporal(TemporalType.DATE)
+    private Date checkIn;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "check_out")
+    @Temporal(TemporalType.DATE)
+    private Date checkOut;
     // @Max(value=?)  @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce field validation
     @Basic(optional = false)
     @NotNull
@@ -62,8 +78,10 @@ public class ReservationRooms implements Serializable {
         this.id = id;
     }
 
-    public ReservationRooms(Long id, BigDecimal pricePerNight) {
+    public ReservationRooms(Long id, Date checkIn, Date checkOut, BigDecimal pricePerNight) {
         this.id = id;
+        this.checkIn = checkIn;
+        this.checkOut = checkOut;
         this.pricePerNight = pricePerNight;
     }
 
@@ -73,6 +91,22 @@ public class ReservationRooms implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Date getCheckIn() {
+        return checkIn;
+    }
+
+    public void setCheckIn(Date checkIn) {
+        this.checkIn = checkIn;
+    }
+
+    public Date getCheckOut() {
+        return checkOut;
+    }
+
+    public void setCheckOut(Date checkOut) {
+        this.checkOut = checkOut;
     }
 
     public BigDecimal getPricePerNight() {
