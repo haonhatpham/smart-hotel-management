@@ -20,14 +20,17 @@ public interface ReservationRepository {
     Reservations addOrUpdate(Reservations reservation);
     Reservations updateStatus(Long id, String status);
     List<ReservationRooms> getReservationRooms(Long reservationId);
-    void replaceReservationRooms(Long reservationId, List<ReservationRooms> items);
+//    ReservationRooms addOrUpdateReservationRoom(ReservationRooms reservationRoom);
 
     Invoices getInvoiceByReservationId(Long reservationId);
-    Invoices addOrUpdateInvoice(Invoices invoice);
 
     List<ServiceOrders> getServiceOrders(Long reservationId);
-
-    boolean hasOverlapForAnyRoom(List<Long> roomIds, java.time.LocalDate checkIn, java.time.LocalDate checkOut, List<String> statuses);
+//    ServiceOrders addOrUpdateServiceOrder(ServiceOrders serviceOrder);
 
     List<Reservations> getReservations(Map<String, String> params);
+
+
+    ReservationRooms addOrUpdateReservationRoom(ReservationRooms reservationRoom);
+    ServiceOrders addOrUpdateServiceOrder(ServiceOrders serviceOrder) ;
+
 }

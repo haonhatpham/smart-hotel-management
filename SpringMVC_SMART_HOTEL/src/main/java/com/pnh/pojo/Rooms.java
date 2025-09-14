@@ -4,6 +4,7 @@
  */
 package com.pnh.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -22,7 +23,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Set;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Transient;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,7 +37,8 @@ import org.springframework.web.multipart.MultipartFile;
     @NamedQuery(name = "Rooms.findById", query = "SELECT r FROM Rooms r WHERE r.id = :id"),
     @NamedQuery(name = "Rooms.findByRoomNumber", query = "SELECT r FROM Rooms r WHERE r.roomNumber = :roomNumber"),
     @NamedQuery(name = "Rooms.findByFloor", query = "SELECT r FROM Rooms r WHERE r.floor = :floor"),
-    @NamedQuery(name = "Rooms.findByStatus", query = "SELECT r FROM Rooms r WHERE r.status = :status")})
+    @NamedQuery(name = "Rooms.findByStatus", query = "SELECT r FROM Rooms r WHERE r.status = :status"),
+    @NamedQuery(name = "Rooms.findByImageUrl", query = "SELECT r FROM Rooms r WHERE r.imageUrl = :imageUrl")})
 public class Rooms implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -74,9 +75,10 @@ public class Rooms implements Serializable {
     @JoinColumn(name = "room_type_id", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private RoomTypes roomTypeId;
-
+    
     @Transient
     private MultipartFile file;
+
 
     public Rooms() {
     }
@@ -187,8 +189,8 @@ public class Rooms implements Serializable {
     public String toString() {
         return "com.pnh.pojo.Rooms[ id=" + id + " ]";
     }
-
-    /**
+    
+        /**
      * @return the file
      */
     public MultipartFile getFile() {
@@ -201,5 +203,5 @@ public class Rooms implements Serializable {
     public void setFile(MultipartFile file) {
         this.file = file;
     }
-
+    
 }

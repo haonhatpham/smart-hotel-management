@@ -89,18 +89,34 @@ public class ApiPaymentController {
             Payments savedPayment = paymentService.createPayment(payment);
 
             String paymentUrl;
-            if ("MOMO".equalsIgnoreCase(paymentMethod)) {
+            if ("WALLET".equalsIgnoreCase(paymentMethod)) {
                 paymentUrl = paymentService.createMoMoPaymentUrl(savedPayment.getId(), amount);
-            } else if ("VNPAY".equalsIgnoreCase(paymentMethod)) {
+                paymentService.updatePaymentStatus(savedPayment.getId(), "PENDING");
+            } else if ("CARD".equalsIgnoreCase(paymentMethod)) {
                 paymentUrl = paymentService.createVNPayPaymentUrl(savedPayment.getId(), amount);
+                paymentService.updatePaymentStatus(savedPayment.getId(), "PENDING");
+            } else if ("CASH".equalsIgnoreCase(paymentMethod)) {
+                // Thanh toán tại quầy: đánh dấu là SUCCESS và cập nhật reservation
+                paymentService.updatePaymentStatus(savedPayment.getId(), "SUCCESS");
+                payment.setPaidAt(new Date());
+                paymentService.updatePayment(payment);
+                reservationService.updateStatus(reservation.getId(), "CONFIRMED");
+                
+                String successUrl = frontendBaseUrl + "/thankyou/result?success=true&method=" + paymentMethod
+                        + "&orderId=" + savedPayment.getId() + (amount != null ? "&amount=" + amount : "");
+                
+                return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                        "success", true,
+                        "message", "Đặt phòng thành công! Vui lòng thanh toán tại quầy khi nhận phòng.",
+                        "paymentId", savedPayment.getId(),
+                        "successUrl", successUrl
+                ));
             } else {
                 return ResponseEntity.badRequest().body(Map.of(
                         "success", false,
                         "message", "Phương thức thanh toán không hợp lệ"
                 ));
             }
-
-            paymentService.updatePaymentStatus(savedPayment.getId(), "PENDING");
 
             String successUrl = frontendBaseUrl + "/thankyou/result?success=true&method=" + paymentMethod
                     + "&orderId=" + savedPayment.getId() + (amount != null ? "&amount=" + amount : "");

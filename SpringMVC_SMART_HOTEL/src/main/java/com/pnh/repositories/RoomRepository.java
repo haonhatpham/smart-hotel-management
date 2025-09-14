@@ -21,9 +21,6 @@ public interface RoomRepository {
 
     Rooms getRoomById(Long id);
 
-    Rooms getRoomByNumber(String roomNumber);
-
-    
     boolean existsByRoomNumber(String roomNumber);
 
     void addOrUpdate(Rooms r);
@@ -35,15 +32,6 @@ public interface RoomRepository {
 
     
     long countByRoomType(Long roomTypeId);
-    
-   
-    boolean isRoomFree(Long roomId, LocalDate checkIn, LocalDate checkOut);
-    
-   
-    List<Rooms> findByRoomTypeId(Long roomTypeId);
-    
-    List<Rooms> findByStatus(String status);
-    
     
     int updateStatusByIds(List<Long> ids, String status);
 }

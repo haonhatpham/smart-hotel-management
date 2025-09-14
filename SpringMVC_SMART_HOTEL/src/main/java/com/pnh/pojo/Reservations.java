@@ -4,9 +4,8 @@
  */
 package com.pnh.pojo;
 
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -83,8 +82,8 @@ public class Reservations implements Serializable {
     @Column(name = "updated_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
-    @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "reservationId")
+    @JsonIgnore
     private Set<ReservationRooms> reservationRoomsSet;
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "reservationId")
     private Invoices invoices;
@@ -94,14 +93,17 @@ public class Reservations implements Serializable {
     @JoinColumn(name = "customer_id", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private Users customerId;
-    @JsonIgnore
+    
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "reservationId")
+    @JsonIgnore
     private Set<Reviews> reviewsSet;
-     @JsonIgnore
+    
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "reservationId")
-    private Set<Payments> paymentsSet;
     @JsonIgnore
+    private Set<Payments> paymentsSet;
+    
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "reservationId")
+    @JsonIgnore
     private Set<ServiceOrders> serviceOrdersSet;
 
     public Reservations() {
@@ -247,7 +249,6 @@ public class Reservations implements Serializable {
     public String toString() {
         return "com.pnh.pojo.Reservations[ id=" + id + " ]";
     }
-    
- 
-    
+
+
 }

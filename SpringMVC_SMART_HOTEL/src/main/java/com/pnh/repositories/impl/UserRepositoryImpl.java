@@ -41,6 +41,12 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Users getById(Long id) {
+        Session s = this.factory.getObject().getCurrentSession();
+        return s.find(Users.class, id);
+    }
+
+    @Override
     public Users addUser(Users u) {
         Session s = this.factory.getObject().getCurrentSession();
         s.persist(u);
