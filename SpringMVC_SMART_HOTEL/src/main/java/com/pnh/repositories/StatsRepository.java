@@ -14,9 +14,8 @@ public interface StatsRepository {
 
     List<Object[]> statsRevenueByTime(String time, int year);
 
-    List<Object[]> statsOccupancyByMonth(int year);
+    List<Object[]> statsOccupancyByTime(String time, int year);
 
-    List<Object[]> statsAvgRatingByMonth(int year);
+     List<Object[]> statsAvgRatingByTime(String time, int year);
 
-    long countAllRooms();
 }

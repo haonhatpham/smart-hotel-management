@@ -24,6 +24,7 @@ SET FOREIGN_KEY_CHECKS=1;
 INSERT INTO users (email, username, password, full_name, phone, role) VALUES
  ('admin@example.com','admin','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Admin','0900000000','ADMIN'),
  ('reception@example.com','reception','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Reception','0900000001','RECEPTION'),
+ ('housekeeping@example.com','housekeeping','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Housekeeping','0900000002','HOUSEKEEPING'),
  ('alice@example.com','alice','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Alice','0900001001','CUSTOMER'),
  ('bob@example.com','bob','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Bob','0900001002','CUSTOMER'),
  ('charlie@example.com','charlie','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Charlie','0900001003','CUSTOMER'),
@@ -239,23 +240,23 @@ VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHE
 -- Housekeeping tasks cho các phòng đã checkout
 INSERT INTO housekeeping_tasks (room_id, task, status, assignee_id, created_at, updated_at) VALUES
 -- Tháng 1: Phòng 101, 102, 201, 202, 301
-((SELECT id FROM rooms WHERE room_number='101'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-01-21 10:00:00', '2025-01-21 11:30:00'),
-((SELECT id FROM rooms WHERE room_number='102'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-01-21 10:00:00', '2025-01-21 11:45:00'),
-((SELECT id FROM rooms WHERE room_number='201'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-01-21 10:00:00', '2025-01-21 12:00:00'),
-((SELECT id FROM rooms WHERE room_number='202'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-01-21 10:00:00', '2025-01-21 12:15:00'),
-((SELECT id FROM rooms WHERE room_number='301'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-01-21 10:00:00', '2025-01-21 12:30:00'),
+((SELECT id FROM rooms WHERE room_number='101'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='housekeeping'), '2025-01-21 10:00:00', '2025-01-21 11:30:00'),
+((SELECT id FROM rooms WHERE room_number='102'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='housekeeping'), '2025-01-21 10:00:00', '2025-01-21 11:45:00'),
+((SELECT id FROM rooms WHERE room_number='201'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='housekeeping'), '2025-01-21 10:00:00', '2025-01-21 12:00:00'),
+((SELECT id FROM rooms WHERE room_number='202'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='housekeeping'), '2025-01-21 10:00:00', '2025-01-21 12:15:00'),
+((SELECT id FROM rooms WHERE room_number='301'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='housekeeping'), '2025-01-21 10:00:00', '2025-01-21 12:30:00'),
 
 -- Tháng 2: Phòng 101, 103, 104, 203, 301, 302
-((SELECT id FROM rooms WHERE room_number='101'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-02-14 10:00:00', '2025-02-14 11:30:00'),
-((SELECT id FROM rooms WHERE room_number='103'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-02-14 10:00:00', '2025-02-14 11:45:00'),
-((SELECT id FROM rooms WHERE room_number='104'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-02-14 10:00:00', '2025-02-14 12:00:00'),
-((SELECT id FROM rooms WHERE room_number='203'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-02-14 10:00:00', '2025-02-14 12:15:00'),
-((SELECT id FROM rooms WHERE room_number='301'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-02-14 10:00:00', '2025-02-14 12:30:00'),
-((SELECT id FROM rooms WHERE room_number='302'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-02-14 10:00:00', '2025-02-14 12:45:00'),
+((SELECT id FROM rooms WHERE room_number='101'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='housekeeping'), '2025-02-14 10:00:00', '2025-02-14 11:30:00'),
+((SELECT id FROM rooms WHERE room_number='103'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='housekeeping'), '2025-02-14 10:00:00', '2025-02-14 11:45:00'),
+((SELECT id FROM rooms WHERE room_number='104'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='housekeeping'), '2025-02-14 10:00:00', '2025-02-14 12:00:00'),
+((SELECT id FROM rooms WHERE room_number='203'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='housekeeping'), '2025-02-14 10:00:00', '2025-02-14 12:15:00'),
+((SELECT id FROM rooms WHERE room_number='301'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='housekeeping'), '2025-02-14 10:00:00', '2025-02-14 12:30:00'),
+((SELECT id FROM rooms WHERE room_number='302'), 'Vệ sinh phòng sau checkout', 'DONE', (SELECT id FROM users WHERE username='housekeeping'), '2025-02-14 10:00:00', '2025-02-14 12:45:00'),
 
 -- Maintenance tasks
-((SELECT id FROM rooms WHERE room_number='101'), 'Bảo trì điều hòa', 'PENDING', (SELECT id FROM users WHERE username='reception'), '2025-01-25 09:00:00', NULL),
-((SELECT id FROM rooms WHERE room_number='201'), 'Kiểm tra hệ thống điện', 'DONE', (SELECT id FROM users WHERE username='reception'), '2025-02-01 09:00:00', '2025-02-01 10:30:00');
+((SELECT id FROM rooms WHERE room_number='101'), 'Bảo trì điều hòa', 'PENDING', (SELECT id FROM users WHERE username='housekeeping'), '2025-01-25 09:00:00', NULL),
+((SELECT id FROM rooms WHERE room_number='201'), 'Kiểm tra hệ thống điện', 'DONE', (SELECT id FROM users WHERE username='housekeeping'), '2025-02-01 09:00:00', '2025-02-01 10:30:00');
 
 -- Một vài review
 INSERT INTO reviews (reservation_id, rating, comment, visible, created_at) VALUES

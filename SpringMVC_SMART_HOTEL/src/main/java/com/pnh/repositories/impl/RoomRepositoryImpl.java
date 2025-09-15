@@ -75,12 +75,6 @@ public class RoomRepositoryImpl implements RoomRepository {
                 predicates.add(b.equal(root.get("status"), status));
             }
 
-            // Lọc theo tầng
-            String floor = params.get("floor");
-            if (floor != null && !floor.isEmpty()) {
-                predicates.add(b.equal(root.get("floor"), Integer.valueOf(floor)));
-            }
-
             // Tìm phòng trống theo ngày check-in/check-out
             String checkIn = params.get("checkIn");
             String checkOut = params.get("checkOut");
@@ -195,20 +189,16 @@ public class RoomRepositoryImpl implements RoomRepository {
     }
 
     @Override
-    public int updateStatusByIds(List<Long> ids, String status) {
-        if (ids == null || ids.isEmpty()) {
-            return 0;
-        }
-
-        Session s = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder cb = s.getCriteriaBuilder();
+    public int updateStatusById(Long roomId, String status) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
         CriteriaUpdate<Rooms> update = cb.createCriteriaUpdate(Rooms.class);
 
         Root<Rooms> root = update.from(Rooms.class);
-        update.set(root.get("status"), status);
-        update.where(root.get("id").in(ids));
+        update.set(root.get("status"), status);          // cập nhật trường status
+        update.where(cb.equal(root.get("id"), roomId)); // điều kiện chỉ phòng có id = roomId
 
-        return s.createQuery(update).executeUpdate();
+        return session.createQuery(update).executeUpdate(); // trả về số bản ghi được cập nhật
     }
 
     @Override

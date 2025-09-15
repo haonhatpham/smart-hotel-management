@@ -10,8 +10,16 @@
 
 <main class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0">Quản lý phòng</h3>
+        <h3 class="mb-0">
+            Quản lý phòng
+            <span th:if="${#authorization.expression('hasRole(''HOUSEKEEPING'')')}" class="badge bg-secondary ms-2">Housekeeping</span>
+            <span th:if="${#authorization.expression('hasRole(''RECEPTION'')')}" class="badge bg-primary ms-2">Reception</span>
+        </h3>
+    </div>
 
+    <!-- Hiển thị thông báo lỗi nếu có -->
+    <div th:if="${error}" class="alert alert-danger" role="alert">
+        <span th:text="${error}"></span>
     </div>
 
     <div class="table-responsive shadow-sm">
@@ -24,7 +32,6 @@
                     <th>Tầng</th>
                     <th>Trạng thái</th>
                     <th>Ảnh</th>
-                    <th class="text-end">Hành động</th>
                 </tr>
             </thead>
             <tbody>
@@ -33,18 +40,30 @@
                     <td th:text="${r.roomNumber}">101</td>
                     <td th:text="${r.roomTypeId != null ? r.roomTypeId.name : ''}">Standard</td>
                     <td th:text="${r.floor}">1</td>
-                    <td th:text="${r.status}">AVAILABLE</td>
+                    <td>
+                        <!-- Form cập nhật trạng thái -->
+                        <form th:action="@{${#authorization.expression('hasRole(''RECEPTION'')') 
+                              ? '/reception/booking_manage/updateStatus' 
+                              : '/housekeeping/booking_manage/updateStatus'}}" 
+                              method="post" 
+                              class="d-flex align-items-center">
+                            <input type="hidden" name="id" th:value="${r.id}" />
+                            <select name="status" class="form-select form-select-sm me-2">
+                                <option value="AVAILABLE" th:selected="${r.status == 'AVAILABLE'}">Có sẵn</option>
+                                <option value="OCCUPIED" th:selected="${r.status == 'OCCUPIED'}">Đang sử dụng</option>
+                                <option value="MAINTENANCE" th:selected="${r.status == 'MAINTENANCE'}">Bảo trì</option>
+                                <option value="CLEANING" th:selected="${r.status == 'CLEANING'}">Đang dọn dẹp</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-success">Cập nhật</button>
+                        </form>
+                    </td>
                     <td>
                         <img th:if="${r.imageUrl}" th:src="${r.imageUrl}" alt="image" style="height:40px; object-fit:cover;">
                     </td>
-                    <td class="text-end">
-                        <a th:if="${#authorization.expression('hasRole(''RECEPTION'')')}" th:href="@{'/reception/rooms/' + ${r.id} + '/edit'}" class="btn btn-sm btn-info">Cập nhật</a>
-                        <a th:if="${#authorization.expression('hasRole(''HOUSEKEEPING'')')}" th:href="@{'/housekeeping/rooms/' + ${r.id} + '/edit'}" class="btn btn-sm btn-info">Cập nhật</a>
-                    </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(rooms)}">
-                    <td colspan="7" class="text-center text-muted">Chưa có phòng</td>
-                </tr>       
+                    <td colspan="6" class="text-center text-muted">Chưa có phòng</td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -53,5 +72,3 @@
 <th:block th:replace="base :: footer"></th:block>
 </body>
 </html>
-
-

@@ -279,6 +279,7 @@ public class ApiPaymentController {
                     payment.setStatus("SUCCESS");
                     payment.setPaidAt(new Date());
                     Reservations r = payment.getReservationId();
+
                     Invoices invoice = new Invoices();
                     invoice.setReservationId(r);
                     invoice.setIssuedAt(new Date());
@@ -310,6 +311,7 @@ public class ApiPaymentController {
                             mailEx.printStackTrace();
                             System.err.println("Không gửi được email xác nhận, nhưng vẫn cập nhật trạng thái");
                         }
+
                     }
                 } else {
                     payment.setStatus("FAILED");

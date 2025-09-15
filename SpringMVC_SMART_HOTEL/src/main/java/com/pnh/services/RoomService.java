@@ -26,7 +26,7 @@ public interface RoomService {
     void deleteRoom(Long id);
 
 
-    int updateStatusByIds(List<Long> ids, String status);
+    int updateStatusById(Long roomId, String status);
 
 
     long countByStatus(String status);

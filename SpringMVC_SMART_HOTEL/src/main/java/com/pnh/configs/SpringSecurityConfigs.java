@@ -14,6 +14,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -31,6 +32,7 @@ import com.pnh.filters.JwtFilter;
 @Configuration
 @EnableTransactionManagement
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 @ComponentScan(basePackages = {
     "com.pnh.controllers",
     "com.pnh.repositories",
@@ -57,12 +59,13 @@ public class SpringSecurityConfigs {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(c -> c.disable()).authorizeHttpRequests(requests
                 -> requests
-                        .requestMatchers("/login", "/logout", "/css/**", "/js/**", "/images/**", "/api/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/reception/**").hasRole("RECEPTION")
-                        .requestMatchers("/housekeeping/**").hasRole("HOUSEKEEPING")
-                        .requestMatchers("/accounting/**").hasRole("ACCOUNTANT")
-                        .anyRequest().authenticated())
+                .requestMatchers("/login", "/logout","/", "/rooms", "/rooms/**", "/css/**", "/js/**", "/images/**","/api/**").permitAll()
+                .requestMatchers("/api/rooms", "/api/rooms/**", "/api/room-types", "/api/services").permitAll()
+                .requestMatchers("/api/reservations/**", "/api/payments/**", "/api/reviews/**").authenticated()
+                .requestMatchers("/manage/**", "/stats").hasRole("ADMIN")
+                .requestMatchers("/reception/**").hasRole("RECEPTION")
+                .requestMatchers("/housekeeping/**").hasRole("HOUSEKEEPING")
+                .anyRequest().authenticated())
                 .formLogin(form -> form.loginPage("/login")
                 .loginProcessingUrl("/login")
                 .defaultSuccessUrl("/", true)
@@ -88,7 +91,7 @@ public class SpringSecurityConfigs {
 //        return new StandardServletMultipartResolver();
 //    }
 
-    @Bean
+     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();

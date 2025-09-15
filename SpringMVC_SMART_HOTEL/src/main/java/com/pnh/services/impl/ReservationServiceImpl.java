@@ -96,6 +96,7 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setCheckOut(latestCheckOut);
         reservation.setStatus(dto.getStatus() != null ? dto.getStatus() : "HELD");
         reservation.setCreatedAt(new Date());
+        reservation.setCreatedBy(dto.getCreatedBy() != null ? this.userService.getById(dto.getCreatedBy()) : null);
         
         // Lấy customer
         Users customer = this.userService.getById(dto.getCustomerId());

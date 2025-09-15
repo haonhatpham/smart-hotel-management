@@ -16,23 +16,17 @@
         <div class="card p-4 mb-5">
             <form id="filterForm" method="get" th:action="@{/stats}">
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label for="time" class="form-label">Thời gian</label>
-                        <select class="form-select" id="time" name="time" onchange="onTimeChange()">
+                        <select class="form-select" id="time" name="time" onchange="document.getElementById('filterForm').submit()">
                             <option value="MONTH" th:selected="${time == 'MONTH'}">Theo tháng</option>
                             <option value="QUARTER" th:selected="${time == 'QUARTER'}">Theo quý</option>
                             <option value="YEAR" th:selected="${time == 'YEAR'}">Theo năm</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label for="year" class="form-label">Năm</label>
                         <input type="number" class="form-control" id="year" name="year" th:value="${selectedYear}" min="2000" max="2099" onchange="document.getElementById('filterForm').submit()">
-                    </div>
-                    <div class="col-md-4" id="periodContainer" style="display:none;">
-                        <label for="period" class="form-label">Kỳ</label>
-                        <select class="form-select" id="period" name="period" onchange="document.getElementById('filterForm').submit()">
-                            <option value="ALL" th:selected="${period == 'ALL'}">Tất cả</option>
-                        </select>
                     </div>
                 </div>
             </form>
@@ -66,12 +60,11 @@
         const ratingData = /*[[${ratingData}]]*/ [];
         const selectedTime = /*[[${time}]]*/ 'MONTH';
         const selectedYear = /*[[${selectedYear}]]*/ '2025';
-        const selectedPeriod = /*[[${period}]]*/ 'ALL';
 
         function renderCharts() {
             const time = document.getElementById('time').value;
 
-            // Tạo dữ liệu từ chartData
+            // Revenue Chart
             const labelsRevenue = [];
             const dataRevenue = [];
             revenueData.forEach(item => {
@@ -92,15 +85,9 @@
             });
 
             const ctx = document.getElementById('revenueChart').getContext('2d');
-
-            // Hủy biểu đồ cũ nếu tồn tại
             if (chartInstance) {
                 chartInstance.destroy();
             }
-
-            const titleText = (selectedPeriod && selectedPeriod !== 'ALL')
-                ? ''
-                : (time === 'MONTH' ? 'Tháng' : (time === 'QUARTER' ? 'Quý' : 'Năm'));
 
             chartInstance = new Chart(ctx, {
                 type: 'bar',
@@ -129,12 +116,6 @@
                                     return new Intl.NumberFormat('vi-VN').format(value) + ' VNĐ';
                                 }
                             }
-                        },
-                        x: {
-                            title: {
-                                display: titleText !== '',
-                                text: titleText
-                            }
                         }
                     },
                     plugins: {
@@ -148,13 +129,27 @@
                     }
                 }
             });
-            // Occupancy chart (tháng cố định)
-            const labelsOcc = Array.from({length: 12}, (_, i) => `Tháng ${i+1}`);
-            const dataOcc = new Array(12).fill(0);
+
+            // Occupancy Chart
+            const labelsOcc = [];
+            const dataOcc = [];
             occupancyData.forEach(item => {
-                const idx = item.month - 1;
-                if (idx >= 0 && idx < 12) dataOcc[idx] = Math.round((item.occupancyPercent || 0) * 100) / 100;
+                let label;
+                switch(time) {
+                    case 'MONTH':
+                        label = `Tháng ${item.period}`;
+                        break;
+                    case 'QUARTER':
+                        label = `Quý ${item.period}`;
+                        break;
+                    case 'YEAR':
+                        label = `Năm ${item.period}`;
+                        break;
+                }
+                labelsOcc.push(label);
+                dataOcc.push(Math.round((item.occupancyPercent || 0) * 100) / 100);
             });
+
             const ctxOcc = document.getElementById('occupancyChart').getContext('2d');
             new Chart(ctxOcc, {
                 type: 'line',
@@ -186,17 +181,28 @@
                 }
             });
 
-            // Rating chart (tháng cố định)
-            const labelsRating = Array.from({length: 12}, (_, i) => `Tháng ${i+1}`);
-            const dataRating = new Array(12).fill(0);
-            const dataRatingCount = new Array(12).fill(0);
+            // Rating Chart
+            const labelsRating = [];
+            const dataRating = [];
+            const dataRatingCount = [];
             ratingData.forEach(item => {
-                const idx = item.month - 1;
-                if (idx >= 0 && idx < 12) {
-                    dataRating[idx] = item.avgRating;
-                    dataRatingCount[idx] = item.count;
+                let label;
+                switch(time) {
+                    case 'MONTH':
+                        label = `Tháng ${item.period}`;
+                        break;
+                    case 'QUARTER':
+                        label = `Quý ${item.period}`;
+                        break;
+                    case 'YEAR':
+                        label = `Năm ${item.period}`;
+                        break;
                 }
+                labelsRating.push(label);
+                dataRating.push(item.avgRating);
+                dataRatingCount.push(item.count);
             });
+
             const ctxRating = document.getElementById('ratingChart').getContext('2d');
             new Chart(ctxRating, {
                 type: 'bar',
@@ -229,36 +235,7 @@
             });
         }
 
-        function updatePeriodOptions(time){
-            const container = document.getElementById('periodContainer');
-            const sel = document.getElementById('period');
-            if(!sel) return;
-            sel.innerHTML = '';
-            if(time === 'MONTH'){
-                container.style.display = '';
-                sel.appendChild(new Option('Tất cả', 'ALL', false, selectedPeriod==='ALL'));
-                for(let m=1;m<=12;m++) sel.appendChild(new Option('Tháng '+m, String(m), false, selectedPeriod==String(m)));
-            } else if(time === 'QUARTER'){
-                container.style.display = '';
-                sel.appendChild(new Option('Tất cả', 'ALL', false, selectedPeriod==='ALL'));
-                for(let q=1;q<=4;q++) sel.appendChild(new Option('Quý '+q, String(q), false, selectedPeriod==String(q)));
-            } else {
-                container.style.display = 'none';
-            }
-            // Đảm bảo giá trị được chọn khớp model
-            if (container.style.display !== 'none') {
-                sel.value = selectedPeriod || 'ALL';
-            }
-        }
-
-        function onTimeChange(){
-            const time = document.getElementById('time').value;
-            updatePeriodOptions(time);
-            document.getElementById('filterForm').submit();
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
-            updatePeriodOptions(selectedTime);
             renderCharts();
         });
     </script>

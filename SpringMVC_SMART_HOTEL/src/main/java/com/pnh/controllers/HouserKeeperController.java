@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  *
@@ -21,39 +23,32 @@ import org.springframework.web.bind.annotation.PostMapping;
  */
 
 @Controller
+@RequestMapping("/housekeeping")
 public class HouserKeeperController {
      @Autowired
     private RoomTypeService roomTypeService;
     
     @Autowired
     private RoomService roomService;
-    @GetMapping("/housekeeping/booking_manage")
+    @GetMapping("/booking_manage")
     public String bookingManage(Model model) {
         model.addAttribute("rooms", this.roomService.getRooms(null));
         model.addAttribute("roomTypes", this.roomTypeService.getRoomTypes());
         return "booking_manage"; 
     }
     
-      @GetMapping("/housekeeping/rooms/{id}/edit")
-    public String editRoom(@PathVariable("id") Long id, Model model) {
-        Rooms room = this.roomService.getRoomById(id);
-        if (room == null) {
+    @PostMapping("/booking_manage/updateStatus")
+    public String updateStatus(@RequestParam("id") Long roomId,
+            @RequestParam("status") String status,
+            Model model) {
+        int updated = this.roomService.updateStatusById(roomId, status);
+        if (updated > 0) {
+            return "redirect:/housekeeping/booking_manage";
+        } else {
+            model.addAttribute("error", "Không tìm thấy phòng để cập nhật!");
+            model.addAttribute("rooms", this.roomService.getRooms(null));
+            model.addAttribute("roomTypes", this.roomTypeService.getRoomTypes());
             return "booking_manage";
         }
-        model.addAttribute("room", room);
-        model.addAttribute("roomTypes", this.roomTypeService.getRoomTypes());
-        return "edit_booking";
     }
-    
-    @PostMapping("/housekeeping/rooms")
-    public String updateRoomStatus(@ModelAttribute Rooms room,Model model) {
-    Rooms existingRoom = roomService.getRoomById(room.getId());
-    if (existingRoom != null) {
-        existingRoom.setStatus(room.getStatus()); // chỉ update status
-        roomService.addOrUpdate(existingRoom);
-    }
-    model.addAttribute("rooms", this.roomService.getRooms(null));
-    model.addAttribute("roomTypes", this.roomTypeService.getRoomTypes());
-    return "booking_manage";
-}
 }

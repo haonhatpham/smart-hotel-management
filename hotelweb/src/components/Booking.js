@@ -28,7 +28,6 @@ const Booking = () => {
         loadRoomTypes();
         loadServices();
         setDefaultDatesIfEmpty();
-        loadAllAvailableRooms();
     }, []);
 
     
@@ -104,25 +103,24 @@ const Booking = () => {
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
             
+            const defaultCheckIn = today.toISOString().split('T')[0];
+            const defaultCheckOut = tomorrow.toISOString().split('T')[0];
+    
             setSearchForm(prev => ({
                 ...prev,
-                checkIn: today.toISOString().split('T')[0],
-                checkOut: tomorrow.toISOString().split('T')[0]
+                checkIn: defaultCheckIn,
+                checkOut: defaultCheckOut
             }));
-        }
-    };
-
-    const loadAllAvailableRooms = async () => {
-        try {
-            setLoading(true);
-            const res = await Apis.get(endpoints['rooms']);            
-            setSearchResults(res.data || []);
-
-        } catch (error) {
-            console.error('Lỗi khi load phòng có sẵn: ', error);
-            setSearchResults([]);
-        } finally {
-            setLoading(false);
+    
+            // set vào URL -> trigger useEffect([searchParams])
+            setSearchParams({
+                checkIn: defaultCheckIn,
+                checkOut: defaultCheckOut,
+                guests: '2'
+            });
+        } else {
+            // nếu URL có sẵn checkIn/checkOut thì search luôn
+            searchRooms();
         }
     };
 
