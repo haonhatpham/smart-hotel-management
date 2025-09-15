@@ -4,8 +4,10 @@
  */
 package com.pnh.controllers;
 
+import com.pnh.pojo.Invoices;
 import com.pnh.pojo.Payments;
 import com.pnh.pojo.Reservations;
+import com.pnh.services.InvoiceService;
 import com.pnh.services.PaymentService;
 import com.pnh.services.ReservationService;
 import java.net.URLEncoder;
@@ -33,6 +35,8 @@ import static com.pnh.utils.HmacUtil.hmacSHA512;
 import com.pnh.utils.MailUtil;
 import java.math.BigDecimal;
 import java.util.stream.Collectors;
+import org.hibernate.Hibernate;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
@@ -48,6 +52,9 @@ public class ApiPaymentController {
 
     @Autowired
     private ReservationService reservationService;
+
+    @Autowired
+    private InvoiceService invoiceSerive;
 
     @Value("${vnpay.hashSecret}")
     private String vnpayHashSecret;
@@ -101,10 +108,16 @@ public class ApiPaymentController {
                 payment.setPaidAt(new Date());
                 paymentService.updatePayment(payment);
                 reservationService.updateStatus(reservation.getId(), "CONFIRMED");
-                
+                Invoices invoice = new Invoices();
+                invoice.setReservationId(reservation);
+                invoice.setIssuedAt(new Date());
+                invoice.setTotalAmount(payment.getAmount());
+
+                invoiceSerive.save(invoice);
+
                 String successUrl = frontendBaseUrl + "/thankyou/result?success=true&method=" + paymentMethod
                         + "&orderId=" + savedPayment.getId() + (amount != null ? "&amount=" + amount : "");
-                
+
                 return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                         "success", true,
                         "message", "Đặt phòng thành công! Vui lòng thanh toán tại quầy khi nhận phòng.",
@@ -180,6 +193,34 @@ public class ApiPaymentController {
                     Reservations r = payment.getReservationId();
                     if (r != null) {
                         reservationService.updateStatus(r.getId(), "CONFIRMED");
+                        Invoices invoice = new Invoices();
+                        invoice.setReservationId(r);
+                        invoice.setIssuedAt(new Date());
+                        invoice.setTotalAmount(payment.getAmount());
+                        invoiceSerive.save(invoice);
+                        try {
+          
+                            String serviceOrdersDetails = reservationService.getServiceOrders(r.getId()).stream()
+                                .map(order -> "Dịch vụ: " + order.getServiceId().getName()
+                                             + " (Giá: " + order.getAmount()+ ")")
+                                .collect(Collectors.joining(", "));
+                            String email = r.getCustomerId().getEmail();
+                            String roomDetails = reservationService.getReservationsRoomByReservationsId(r.getId()).stream()
+                                    .map(room -> "Phòng " + room.getRoomId().getRoomNumber()
+                                    + " (Nhận: " + r.getCheckIn()
+                                    + ", Trả: " + r.getCheckOut() + ")")
+                                    .collect(Collectors.joining(", "));
+
+                            String subject = "Thanh toán thành công";
+                            String body = "Bạn đã thanh toán " + payment.getAmount()
+                                    + " cho: " + roomDetails + serviceOrdersDetails;
+
+                            MailUtil.sendMail(email, subject, body);
+                            System.out.println(" Đã gửi mail xác nhận cho: " + email);
+                        } catch (Exception mailEx) {
+                            mailEx.printStackTrace();
+                            System.err.println("Không gửi được email xác nhận, nhưng vẫn cập nhật trạng thái");
+                        }
                     }
                 } else {
                     payment.setStatus("FAILED");
@@ -238,22 +279,39 @@ public class ApiPaymentController {
                     payment.setStatus("SUCCESS");
                     payment.setPaidAt(new Date());
                     Reservations r = payment.getReservationId();
+
+                    Invoices invoice = new Invoices();
+                    invoice.setReservationId(r);
+                    invoice.setIssuedAt(new Date());
+                    invoice.setTotalAmount(payment.getAmount());
+
+                    invoiceSerive.save(invoice);
                     if (r != null) {
-//                        String email = r.getCustomerId().getEmail();
-//
-//                        // Lấy thông tin phòng và giờ nhận/trả phòng
-//                        String roomDetails = r.getReservationRoomsSet().stream()
-//                                .map(rr -> "Phòng " + rr.getRoomId().getRoomNumber()
-//                                + " (Nhận: " + r.getCheckIn()
-//                                + ", Trả: " + r.getCheckOut() + ")")
-//                                .collect(Collectors.joining(", "));
-//
-//                        // Gửi mail
-//                        String subject = "Thanh toán thành công";
-//                        String body = "Bạn đã thanh toán " + payment.getAmount()
-//                                + " cho: " + roomDetails;
-//                        MailUtil.sendMail(email, subject, body);
-//                        reservationService.updateStatus(r.getId(), "CONFIRMED");
+                        reservationService.updateStatus(r.getId(), "CONFIRMED");
+                        try {
+                            String email = r.getCustomerId().getEmail();
+                              String serviceOrdersDetails = reservationService.getServiceOrders(r.getId()).stream()
+                                .map(order -> "Dịch vụ: " + order.getServiceId().getName()
+                                             + " (Giá: " + order.getAmount()+ ")")
+                                .collect(Collectors.joining(", "));
+                    
+                            String roomDetails = reservationService.getReservationsRoomByReservationsId(r.getId()).stream()
+                                    .map(rr -> "Phòng " + rr.getRoomId().getRoomNumber()
+                                    + " (Nhận: " + r.getCheckIn()
+                                    + ", Trả: " + r.getCheckOut() + ")")
+                                    .collect(Collectors.joining(", "));
+
+                            String subject = "Thanh toán thành công";
+                            String body = "Bạn đã thanh toán " + payment.getAmount()
+                                    + " cho: " + roomDetails+ serviceOrdersDetails;
+
+                            MailUtil.sendMail(email, subject, body);
+                            System.out.println(" Đã gửi mail xác nhận cho: " + email);
+                        } catch (Exception mailEx) {
+                            mailEx.printStackTrace();
+                            System.err.println("Không gửi được email xác nhận, nhưng vẫn cập nhật trạng thái");
+                        }
+
                     }
                 } else {
                     payment.setStatus("FAILED");
