@@ -20,4 +20,6 @@ public interface ReservationService {
     List<ReservationRooms> getReservationRooms(Long reservationId);
     List<ServiceOrders> getServiceOrders(Long reservationId);
     Invoices getInvoiceByReservationId(Long reservationId);
+    
+    List<ReservationRooms> getReservationsRoomByReservationsId(Long id);
 }
