@@ -21,15 +21,21 @@ TRUNCATE TABLE customer_profiles;
 TRUNCATE TABLE users;
 SET FOREIGN_KEY_CHECKS=1;
 
-INSERT INTO users (email, username, password, full_name, phone, role) VALUES
- ('admin@example.com','admin','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Admin','0900000000','ADMIN'),
- ('reception@example.com','reception','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Reception','0900000001','RECEPTION'),
- ('housekeeping@example.com','housekeeping','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Housekeeping','0900000002','HOUSEKEEPING'),
- ('alice@example.com','alice','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Alice','0900001001','CUSTOMER'),
- ('bob@example.com','bob','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Bob','0900001002','CUSTOMER'),
- ('charlie@example.com','charlie','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Charlie','0900001003','CUSTOMER'),
- ('diana@example.com','diana','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Diana','0900001004','CUSTOMER'),
- ('eric@example.com','eric','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Eric','0900001005','CUSTOMER');
+INSERT INTO users (email, username, password, full_name, phone, avatar, role) VALUES
+('admin@example.com','admin','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Admin','0900000000','https://res.cloudinary.com/demo/image/upload/v1699999999/avatar/admin.png','ADMIN'),
+
+('reception@example.com','reception','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Reception','0900000001','https://res.cloudinary.com/demo/image/upload/v1699999999/avatar/reception.png','RECEPTION'),
+
+('alice@example.com','alice','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Alice','0900001001','https://res.cloudinary.com/demo/image/upload/v1699999999/avatar/alice.png','CUSTOMER'),
+
+('bob@example.com','bob','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Bob','0900001002','https://res.cloudinary.com/demo/image/upload/v1699999999/avatar/bob.png','CUSTOMER'),
+
+('charlie@example.com','charlie','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Charlie','0900001003','https://res.cloudinary.com/demo/image/upload/v1699999999/avatar/charlie.png','CUSTOMER'),
+
+('diana@example.com','diana','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Diana','0900001004','https://res.cloudinary.com/demo/image/upload/v1699999999/avatar/diana.png','CUSTOMER'),
+
+('eric@example.com','eric','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Eric','0900001005','https://res.cloudinary.com/demo/image/upload/v1699999999/avatar/eric.png','CUSTOMER');
+
 
 INSERT INTO customer_profiles (user_id, dob, address) VALUES
  ((SELECT id FROM users WHERE username='alice'),'1997-05-20','HCM'),

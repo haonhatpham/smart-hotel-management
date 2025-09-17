@@ -59,8 +59,11 @@ const Header = () => {
                             <Link className="nav-link text-success" to="/register">Đăng ký</Link>
                             <Link className="nav-link text-danger" to="/login">Đăng nhập</Link>
                         </>:<>
-                            <Link className="nav-link text-success" to="/profile">Chào {user.username}</Link>
-                            <Button variant="danger"onClick={() => dispatch({"type": "logout"})}>Đăng xuất</Button>
+                            <div className="d-flex align-items-center">
+                                <img src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username || 'U')}&background=0D8ABC&color=fff&size=64`} alt="avatar" className="rounded-circle me-2" style={{width: "32px", height: "32px", objectFit: "cover"}} />
+                                <Link className="nav-link text-success" to="/profile">Chào {user.username}</Link>
+                                <Button variant="danger" className="ms-2" onClick={() => dispatch({"type": "logout"})}>Đăng xuất</Button>
+                            </div>
                         </>}
                                                     
                         <Button 

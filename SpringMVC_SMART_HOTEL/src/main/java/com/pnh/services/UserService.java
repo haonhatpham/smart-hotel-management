@@ -24,5 +24,8 @@ public interface UserService extends UserDetailsService {
     boolean authenticate(String username, String password);
 
     CustomerProfiles getCustomerProfile(String username);
-
+    
+    public Users getUserByEmail(String email);
+    
+    public Users createUserFromGoogle(String email, String name, String pictureUrl);
 }

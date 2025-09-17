@@ -19,6 +19,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import jakarta.persistence.NoResultException;
 
 /**
  *
@@ -37,10 +38,13 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Users getUserByUsername(String username) {
         Session s = this.factory.getObject().getCurrentSession();
-        Query q = s.createNamedQuery("Users.findByUsername", Users.class);
-        q.setParameter("username", username);
-
-        return (Users) q.getSingleResult();
+        try {
+            Query q = s.createNamedQuery("Users.findByUsername", Users.class);
+            q.setParameter("username", username);
+            return (Users) q.getSingleResult();
+        } catch (NoResultException ex) {
+            return null;
+        }
     }
 
     @Override
@@ -53,7 +57,6 @@ public class UserRepositoryImpl implements UserRepository {
     public Users addUser(Users u) {
         Session s = this.factory.getObject().getCurrentSession();
         s.persist(u);
-
         return u;
     }
 
@@ -76,10 +79,17 @@ public class UserRepositoryImpl implements UserRepository {
 
         Root<Users> root = cq.from(Users.class);
 
-        cq.select(root.get("customerProfile"))
+        cq.select(root.get("customerProfiles"))
                 .where(cb.equal(root.get("username"), username));
 
         return s.createQuery(cq).uniqueResult();
     }
 
+    @Override
+    public Users getUserByEmail(String email) {
+        Session s = this.factory.getObject().getCurrentSession();
+        Query<Users> q = s.createNamedQuery("Users.findByEmail", Users.class);
+        q.setParameter("email", email);
+        return q.getSingleResult();
+    }
 }

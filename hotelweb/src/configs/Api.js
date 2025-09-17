@@ -12,6 +12,8 @@ export const endpoints = {
     'payment-status': '/status',
     'register': '/users',
     'login': '/login',
+    'loginGoogle': '/login/google',
+    'googleClientId': '/public/google-client-id',
     'profile': '/secure/profile',
     'customer-profile': '/secure/customer-profile',
 };
