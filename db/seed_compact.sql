@@ -21,7 +21,6 @@ TRUNCATE TABLE customer_profiles;
 TRUNCATE TABLE users;
 SET FOREIGN_KEY_CHECKS=1;
 
-
 INSERT INTO users (email, username, password, full_name, phone, avatar, role) VALUES
 ('admin@example.com','admin','$2a$10$5X9k5N1sTc1/CjVH5XJoje3QMYijH3ETpgkox00R0MdPaJPPrf7wO','Admin','0900000000','https://res.cloudinary.com/demo/image/upload/v1699999999/avatar/admin.png','ADMIN'),
 
