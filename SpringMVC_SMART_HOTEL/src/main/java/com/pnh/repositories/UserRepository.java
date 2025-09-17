@@ -22,4 +22,7 @@ public interface UserRepository {
     boolean authenticate(String username, String password);
 
     CustomerProfiles getCustomerProfileByUsername(String username);
+    
+    public Users getUserByEmail(String email);
+    
 }
