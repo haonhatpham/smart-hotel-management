@@ -131,7 +131,7 @@ public class ApiPaymentController {
                 ));
             }
 
-            String successUrl = frontendBaseUrl + "/thankyou/result?success=true&method=" + paymentMethod
+            String successUrl = frontendBaseUrl + "/thankyou/result?success=false&method=" + paymentMethod
                     + "&orderId=" + savedPayment.getId() + (amount != null ? "&amount=" + amount : "");
 
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(

@@ -79,7 +79,7 @@ public class UserRepositoryImpl implements UserRepository {
 
         Root<Users> root = cq.from(Users.class);
 
-        cq.select(root.get("customerProfile"))
+        cq.select(root.get("customerProfiles"))
                 .where(cb.equal(root.get("username"), username));
 
         return s.createQuery(cq).uniqueResult();

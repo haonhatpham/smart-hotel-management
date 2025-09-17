@@ -4,17 +4,26 @@ import { useLocation, Link } from "react-router-dom";
 const Thankyou = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
+  const success = params.get("success");
   const method = params.get("method");
   const orderId = params.get("orderId");
   const amount = params.get("amount");
   const reservationId = params.get("reservationId");
 
+  // Kiểm tra trạng thái thanh toán
+  const isSuccess = success === "true" || success === null; // null là trường hợp không có tham số success
+
   return (
     <div className="py-5 text-center">
-      <div className="mb-4 text-success">
-        <i className="fa-solid fa-circle-check" style={{ fontSize: 64 }}></i>
-        <h3 className="mt-3">Thanh toán thành công</h3>
-        <p className="text-muted mb-0">Cảm ơn bạn đã đặt phòng tại khách sạn của chúng tôi.</p>
+      <div className={`mb-4 ${isSuccess ? "text-success" : "text-danger"}`}>
+        <i className={`fa-solid ${isSuccess ? "fa-circle-check" : "fa-circle-xmark"}`} style={{ fontSize: 64 }}></i>
+        <h3 className="mt-3">{isSuccess ? "Thanh toán thành công" : "Thanh toán thất bại"}</h3>
+        <p className="text-muted mb-0">
+          {isSuccess 
+            ? "Cảm ơn bạn đã đặt phòng tại khách sạn của chúng tôi." 
+            : "Rất tiếc, thanh toán của bạn không thành công. Vui lòng thử lại hoặc liên hệ hỗ trợ."
+          }
+        </p>
       </div>
 
       <div className="d-inline-block text-start bg-light border rounded p-3 mb-4" style={{ minWidth: 320 }}>
@@ -37,13 +46,20 @@ const Thankyou = () => {
       </div>
 
       <div className="d-flex gap-2 justify-content-center">
-        {reservationId && (
+        {isSuccess && reservationId && (
           <Link to={`/reservations/${reservationId}`} className="btn btn-primary">
             Xem đặt phòng
           </Link>
         )}
+        {!isSuccess && (
+          <Link to="/booking" className="btn btn-primary">
+            Thử lại đặt phòng
+          </Link>
+        )}
         <Link to="/" className="btn btn-outline-secondary">Về trang chủ</Link>
-        <Link to="/booking" className="btn btn-outline-secondary">Tiếp tục đặt phòng</Link>
+        <Link to="/booking" className="btn btn-outline-secondary">
+          {isSuccess ? "Tiếp tục đặt phòng" : "Đặt phòng mới"}
+        </Link>
       </div>
     </div>
   );
