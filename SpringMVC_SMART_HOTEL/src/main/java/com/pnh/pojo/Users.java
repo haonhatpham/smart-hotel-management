@@ -62,7 +62,7 @@ public class Users implements Serializable {
     @Column(name = "username")
     private String username;
     @Basic(optional = false)
-    @NotNull
+//    @NotNull
     @Size(min = 1, max = 255)
     @Column(name = "password")
     private String password;
@@ -73,6 +73,9 @@ public class Users implements Serializable {
     @Size(max = 30)
     @Column(name = "phone")
     private String phone;
+    @Size(max = 500)
+    @Column(name = "avatar")
+    private String avatar;
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 12)
@@ -171,6 +174,14 @@ public class Users implements Serializable {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
     }
 
     public boolean getEnabled() {

@@ -4,7 +4,6 @@
  */
 package com.pnh.services.impl;
 
-
 import com.pnh.pojo.Users;
 import com.pnh.pojo.CustomerProfiles;
 import com.pnh.repositories.UserRepository;
@@ -24,6 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -31,7 +32,7 @@ import com.cloudinary.utils.ObjectUtils;
  */
 @Service
 public class UserServiceImpl implements UserService {
-    
+
     @Autowired
     private UserRepository userRepo;
     @Autowired
@@ -48,8 +49,7 @@ public class UserServiceImpl implements UserService {
     public Users getById(Long id) {
         return this.userRepo.getById(id);
     }
-    
-    
+
     //phương thức của UserDetailsService tự động gọi khi xác thực
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -78,13 +78,19 @@ public class UserServiceImpl implements UserService {
         u.setRole("CUSTOMER");
         u.setEnabled(true);
         u.setCreatedAt(new Date());
-
-        // Lưu ý: Users entity không có field avatar, nên bỏ phần upload avatar
-        // Nếu cần avatar, có thể lưu vào a hoặc tạo field mới
-
+        
+        if (avatar != null && !avatar.isEmpty()) {
+            try {
+                Map res = cloudinary.uploader().upload(avatar.getBytes(), ObjectUtils.asMap("resource_type", "auto"));
+                u.setAvatar(res.get("secure_url").toString());
+            } catch (IOException ex) {
+                Logger.getLogger(UserServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
         return this.userRepo.addUser(u);
     }
-    
+
     @Override
     public boolean authenticate(String username, String password) {
         return this.userRepo.authenticate(username, password);
@@ -93,5 +99,36 @@ public class UserServiceImpl implements UserService {
     @Override
     public CustomerProfiles getCustomerProfile(String username) {
         return this.userRepo.getCustomerProfileByUsername(username);
+    }
+
+    @Override
+    public Users getUserByEmail(String email) {
+        return this.userRepo.getUserByEmail(email);
+    }
+
+    @Override
+    public Users createUserFromGoogle(String email, String fullname, String avatarUrl) {
+        Users existing = null;
+        try {
+            existing = this.userRepo.getUserByEmail(email);
+        } catch (Exception ex) {
+            existing = null;
+        }
+        if (existing != null) {
+            return existing;
+        }
+
+        Users u = new Users();
+        u.setEmail(email);
+        u.setUsername(fullname != null ? fullname : email);
+        u.setUsername(email);
+        u.setRole("CUSTOMER");
+        u.setPassword("1");
+        u.setEnabled(true);
+        u.setCreatedAt(new Date());
+        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+            u.setAvatar(avatarUrl);
+        }
+        return this.userRepo.addUser(u);
     }
 }
