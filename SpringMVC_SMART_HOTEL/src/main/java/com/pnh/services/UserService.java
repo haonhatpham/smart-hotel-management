@@ -24,5 +24,4 @@ public interface UserService extends UserDetailsService {
     boolean authenticate(String username, String password);
 
     CustomerProfiles getCustomerProfile(String username);
-
 }
