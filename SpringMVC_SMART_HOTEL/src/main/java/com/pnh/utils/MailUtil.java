@@ -14,7 +14,7 @@ public class MailUtil {
 
     public static void sendMail(String to, String subject, String text) {
         final String from = "hieuthuhai11b3@gmail.com"; // Gmail của bạn
-        final String password = "your_app_password"; // App Password nếu dùng Gmail
+        final String password = "tmfb ykoh lmkv rzlw"; // App Password nếu dùng Gmail
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -27,7 +27,7 @@ public class MailUtil {
                 return new PasswordAuthentication(from, password);
             }
         });
-
+        session.setDebug(true);  
         try {
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(from));

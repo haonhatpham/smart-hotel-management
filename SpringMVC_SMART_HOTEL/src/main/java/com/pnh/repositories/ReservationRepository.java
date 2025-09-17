@@ -29,5 +29,6 @@ public interface ReservationRepository {
 
     ReservationRooms addOrUpdateReservationRoom(ReservationRooms reservationRoom);
     ServiceOrders addOrUpdateServiceOrder(ServiceOrders serviceOrder) ;
-
+    
+    List<ReservationRooms> getReservationsRoomByReservationsId(Long id);
 }
