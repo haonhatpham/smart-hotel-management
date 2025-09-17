@@ -183,4 +183,11 @@ public class ReservationServiceImpl implements ReservationService {
     public Invoices getInvoiceByReservationId(Long reservationId) {
         return this.reservationRepository.getInvoiceByReservationId(reservationId);
     }
+
+    @Override
+    public List<ReservationRooms> getReservationsRoomByReservationsId(Long id) {
+     return this.reservationRepository.getReservationsRoomByReservationsId(id);
+    }
+
+
 }

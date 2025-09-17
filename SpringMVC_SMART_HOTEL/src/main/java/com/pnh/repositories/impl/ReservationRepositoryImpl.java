@@ -172,4 +172,13 @@ public class ReservationRepositoryImpl implements ReservationRepository {
         return (ServiceOrders) s.merge(serviceOrder);
     }
 
+    @Override
+    public List<ReservationRooms> getReservationsRoomByReservationsId(Long id) {
+        Session s = this.factory.getObject().getCurrentSession();
+        List<ReservationRooms> list = s.createQuery("FROM com.pnh.pojo.ReservationRooms i WHERE i.reservationId.id = :rid", ReservationRooms.class)
+                .setParameter("rid", id)
+                .getResultList();
+        return list.isEmpty() ? null : list;
+    }
+
 }
