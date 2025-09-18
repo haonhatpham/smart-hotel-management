@@ -24,5 +24,4 @@ public interface UserRepository {
     CustomerProfiles getCustomerProfileByUsername(String username);
     
     public Users getUserByEmail(String email);
-    
 }

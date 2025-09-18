@@ -13,8 +13,5 @@ import java.util.Optional;
  */
 public interface InvoiceService {
     Invoices save(Invoices invoice);
-    Optional<Invoices> findById(Long id);
-    boolean existsByReservationId(Long reservationId);
-    
-    Optional<Invoices> findByIdWithDetails(Long id);
+
 }

@@ -28,19 +28,6 @@ public class InvoiceServicesImpl implements InvoiceService{
         return invoicerepository.save(invoice);
     }
 
-    @Override
-    public Optional<Invoices> findById(Long id) {
-        return invoicerepository.findById(id);
-    }
 
-    @Override
-    public boolean existsByReservationId(Long reservationId) {
-        return invoicerepository.existsByReservationId(reservationId);
-    }
-
-    @Override
-    public Optional<Invoices> findByIdWithDetails(Long id) {
-        return invoicerepository.findByIdWithDetails(id);
-    }
     
 }

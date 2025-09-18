@@ -11,7 +11,7 @@ const Thankyou = () => {
   const reservationId = params.get("reservationId");
 
   // Kiểm tra trạng thái thanh toán
-  const isSuccess = success === "true" || success === null; // null là trường hợp không có tham số success
+  const isSuccess = success === "true" || success === null; 
 
   return (
     <div className="py-5 text-center">
