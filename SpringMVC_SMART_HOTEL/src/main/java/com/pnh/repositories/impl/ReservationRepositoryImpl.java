@@ -16,6 +16,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import org.hibernate.Session;
@@ -153,6 +154,36 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     }
 
     @Override
+    public long countReservations(Map<String, String> params) {
+        Session s = this.factory.getObject().getCurrentSession();
+        var b = s.getCriteriaBuilder();
+        var q = b.createQuery(Long.class);
+        var root = q.from(Reservations.class);
+        q.select(b.count(root));
+
+        List<Predicate> predicates = new ArrayList<>();
+        if (params != null) {
+            String customerId = params.get("customerId");
+            if (customerId != null) {
+                customerId = customerId.trim();
+                if (!customerId.isEmpty()) {
+                    try {
+                        predicates.add(b.equal(root.get("customerId").get("id"), Long.valueOf(customerId)));
+                    } catch (NumberFormatException ex) { }
+                }
+            }
+            String status = params.get("status");
+            if (status != null && !status.isEmpty()) {
+                predicates.add(b.equal(root.get("status"), status));
+            }
+            if (!predicates.isEmpty()) {
+                q.where(b.and(predicates.toArray(new Predicate[0])));
+            }
+        }
+        return s.createQuery(q).getSingleResult();
+    }
+
+    @Override
     public ReservationRooms addOrUpdateReservationRoom(ReservationRooms reservationRoom) {
         Session s = this.factory.getObject().getCurrentSession();
         if (reservationRoom.getId() == null) {
@@ -181,4 +212,64 @@ public class ReservationRepositoryImpl implements ReservationRepository {
         return list.isEmpty() ? null : list;
     }
 
+    @Override
+    public boolean existsOverlappingBooking(Long roomId, Date checkIn, Date checkOut) {
+        if (roomId == null || checkIn == null || checkOut == null) return false;
+        Session s = this.factory.getObject().getCurrentSession();
+        String hql = """
+                SELECT COUNT(rr.id) FROM ReservationRooms rr
+                WHERE rr.roomId.id = :roomId
+                  AND rr.reservationId.status <> 'CANCELLED'
+                  AND rr.checkIn < :checkOut AND rr.checkOut > :checkIn
+                """;
+        Long count = s.createQuery(hql, Long.class)
+                .setParameter("roomId", roomId)
+                .setParameter("checkIn", checkIn)
+                .setParameter("checkOut", checkOut)
+                .getSingleResult();
+        return count != null && count > 0;
+    }
+
+    @Override
+    public List<Long> findTopRoomTypeIdsByCustomer(Long customerId, int limit) {
+        Session s = this.factory.getObject().getCurrentSession();
+        String hql = """
+                SELECT rt.id
+                FROM Reservations r
+                JOIN r.reservationRoomsSet rr
+                JOIN rr.roomId room
+                JOIN room.roomTypeId rt
+                WHERE r.customerId.id = :cid
+                  AND r.status IN ('CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT')
+                GROUP BY rt.id
+                ORDER BY COUNT(rr.id) DESC
+                """;
+        var query = s.createQuery(hql, Long.class)
+                .setParameter("cid", customerId);
+        if (limit > 0) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
+
+    @Override
+    public List<Long> findTopServiceIdsByCustomer(Long customerId, int limit) {
+        Session s = this.factory.getObject().getCurrentSession();
+        String hql = """
+                SELECT s.id
+                FROM Reservations r
+                JOIN r.serviceOrdersSet so
+                JOIN so.serviceId s
+                WHERE r.customerId.id = :cid
+                  AND r.status IN ('CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT')
+                GROUP BY s.id
+                ORDER BY COUNT(so.id) DESC
+                """;
+        var query = s.createQuery(hql, Long.class)
+                .setParameter("cid", customerId);
+        if (limit > 0) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
 }

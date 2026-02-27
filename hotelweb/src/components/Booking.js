@@ -1,11 +1,13 @@
 import { useContext, useEffect, useState } from "react";
 import { Alert, Button, Card, Col, Row, Spinner, Form } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 import Apis, { authApis, endpoints } from "../configs/Api";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import cookie from 'react-cookies';
 import { MyCartContext, MyUserContext } from "../configs/MyContexts";
 
 const Booking = () => {
+    const { t } = useTranslation();
     const [searchParams, setSearchParams] = useSearchParams();
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -15,6 +17,9 @@ const Booking = () => {
     const [dateError, setDateError] = useState('');
     const [expandedRoom, setExpandedRoom] = useState(null); 
     const [services, setServices] = useState([]);
+    const [suggestedRange, setSuggestedRange] = useState(null);
+    const [recommendedRoomTypeIds, setRecommendedRoomTypeIds] = useState([]);
+    const [recommendedServiceIds, setRecommendedServiceIds] = useState([]);
     const [, setCustomerProfile] = useState(null);
     const [searchForm, setSearchForm] = useState({
         checkIn: '',
@@ -22,6 +27,8 @@ const Booking = () => {
         guests: '2',
         roomType: ''
     });
+    const [globalMessage, setGlobalMessage] = useState(null);
+    const [globalVariant, setGlobalVariant] = useState("danger");
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
@@ -67,15 +74,27 @@ const Booking = () => {
     useEffect(() => {
         const token = cookie.load('token');
         if (!token) return;
-        console.log('[Booking] Fetching customer-profile...');
         authApis().get(endpoints['customer-profile'])
             .then(res => {
-                console.log('[Booking] customer-profile response:', res.status, res.data);
                 setCustomerProfile(res.data);
             })
-            .catch(err => {
-                console.error('[Booking] customer-profile error:', err);
+            .catch(() => {
                 setCustomerProfile(null);
+            });
+
+        authApis().get(endpoints['recommendations-me'])
+            .then(res => {
+                if (res.data && res.data.success) {
+                    setRecommendedRoomTypeIds(res.data.roomTypeIds || []);
+                    setRecommendedServiceIds(res.data.serviceIds || []);
+                } else {
+                    setRecommendedRoomTypeIds([]);
+                    setRecommendedServiceIds([]);
+                }
+            })
+            .catch(() => {
+                setRecommendedRoomTypeIds([]);
+                setRecommendedServiceIds([]);
             });
     }, [user]);
 
@@ -83,18 +102,14 @@ const Booking = () => {
         try {
             const res = await Apis.get(endpoints['room-types']);
             setRoomTypes(res.data || []);
-        } catch (error) {
-            console.error('Lỗi ko load được loại phòng:', error);
-        }
+        } catch (_) {}
     };
 
     const loadServices = async () => {
         try {
             const res = await Apis.get(endpoints['services']);
             setServices(res.data || []);
-        } catch (error) {
-            console.error('Lỗi ko load được dịch vụ:', error);
-        }
+        } catch (_) {}
     };
 
     const setDefaultDatesIfEmpty = () => {
@@ -127,6 +142,7 @@ const Booking = () => {
     const searchRooms = async () => {
         try {
             setLoading(true);
+            setSuggestedRange(null);
             let url = `${endpoints['rooms']}`;
             const params = new URLSearchParams();
             if (searchForm.checkIn && searchForm.checkOut) {
@@ -142,9 +158,37 @@ const Booking = () => {
             if (query) url += `?${query}`;
 
             const res = await Apis.get(url);
-            setSearchResults(res.data || []);
-        } catch (error) {
-            console.error('Search failed:', error);
+            const data = res.data || [];
+            setSearchResults(data);
+
+            // Nếu không tìm thấy phòng => thử gợi ý khoảng ngày gần nhất còn trống
+            if (!data || data.length === 0 && searchForm.checkIn && searchForm.checkOut) {
+                try {
+                    const params = new URLSearchParams();
+                    params.append('checkIn', searchForm.checkIn);
+                    params.append('checkOut', searchForm.checkOut);
+                    if (searchForm.guests)
+                        params.append('minCapacity', searchForm.guests);
+                    if (searchForm.roomType)
+                        params.append('roomTypeId', searchForm.roomType);
+
+                    const nearestUrl = `${endpoints['rooms-nearest-available']}?${params.toString()}`;
+                    const suggestRes = await Apis.get(nearestUrl);
+                    if (suggestRes.data && suggestRes.data.success) {
+                        setSuggestedRange({
+                            checkIn: suggestRes.data.checkIn,
+                            checkOut: suggestRes.data.checkOut
+                        });
+                    } else {
+                        setSuggestedRange(null);
+                    }
+                } catch (_) {
+                    setSuggestedRange(null);
+                }
+            } else {
+                setSuggestedRange(null);
+            }
+        } catch (_) {
             setSearchResults([]);
         } finally {
             setLoading(false);
@@ -171,7 +215,8 @@ const Booking = () => {
 
     const handleSearchSubmit = () => {
         if (!searchForm.checkIn || !searchForm.checkOut) {
-            alert('Vui lòng chọn ngày nhận và trả phòng');
+            setGlobalMessage('Vui lòng chọn ngày nhận và trả phòng');
+            setGlobalVariant("danger");
             return;
         }
 
@@ -279,7 +324,8 @@ const Booking = () => {
 
     const handleBookNow = () => {
         if (cartState.rooms.length === 0) {
-            alert('Vui lòng chọn ít nhất một phòng');
+            setGlobalMessage('Vui lòng chọn ít nhất một phòng');
+            setGlobalVariant("warning");
             return;
         }
 
@@ -296,9 +342,22 @@ const Booking = () => {
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2>
                     <i className="fas fa-search me-2"></i>
-                    Tìm kiếm phòng
+                    {t("booking.title")}
                 </h2>
             </div>
+
+            {globalMessage && (
+                <div className="mb-3">
+                    <Alert
+                        variant={globalVariant}
+                        onClose={() => setGlobalMessage(null)}
+                        dismissible
+                        className="mb-0"
+                    >
+                        {globalMessage}
+                    </Alert>
+                </div>
+            )}
 
             <Card className="mb-4">
                 <Card.Body>
@@ -373,7 +432,7 @@ const Booking = () => {
                                 disabled={!searchForm.checkIn || !searchForm.checkOut || !!dateError}
                             >
                                 <i className="fas fa-search me-2"></i>
-                                Tìm phòng
+                                {t("booking.title")}
                             </Button>
                         </Col>
                     </Row>
@@ -400,11 +459,46 @@ const Booking = () => {
                             <p className="mt-2">Đang tìm kiếm...</p>
                         </div>
                     ) : searchResults.length === 0 ? (
-                        <Alert variant="info" className="text-center py-4">
-                            <i className="fas fa-info-circle fa-2x mb-2"></i>
-                            <h5>Không tìm thấy phòng trống</h5>
-                            <p>Vui lòng thử thay đổi ngày hoặc loại phòng.</p>
-                        </Alert>
+                        <div>
+                            <Alert variant="info" className="text-center py-4">
+                                <i className="fas fa-info-circle fa-2x mb-2"></i>
+                                <h5>{t("booking.noRoomsTitle")}</h5>
+                                <p>{t("booking.noRoomsBody")}</p>
+                            </Alert>
+                            {suggestedRange && (
+                                <Alert variant="success" className="mt-3 text-center">
+                                    <h6>{t("booking.smartSuggestionTitle")}</h6>
+                                    <p>
+                                        {t("booking.smartSuggestionBody")}&nbsp;
+                                        <strong>{suggestedRange.checkIn} → {suggestedRange.checkOut}</strong>
+                                    </p>
+                                    <Button
+                                        variant="success"
+                                        size="sm"
+                                        onClick={() => {
+                                            const newForm = {
+                                                ...searchForm,
+                                                checkIn: suggestedRange.checkIn,
+                                                checkOut: suggestedRange.checkOut
+                                            };
+                                            setSearchForm(newForm);
+
+                                            const newParams = {
+                                                checkIn: suggestedRange.checkIn,
+                                                checkOut: suggestedRange.checkOut,
+                                                guests: newForm.guests
+                                            };
+                                            if (newForm.roomType) {
+                                                newParams.roomType = newForm.roomType;
+                                            }
+                                            setSearchParams(newParams);
+                                        }}
+                                    >
+                                        Dùng khoảng ngày gợi ý
+                                    </Button>
+                                </Alert>
+                            )}
+                        </div>
                     ) : (
                         <div>
                             {searchResults.map(room => {
@@ -413,6 +507,8 @@ const Booking = () => {
                                 const totalPrice = room.roomTypeId?.price * nights;
                                 const isSelected = cartState.rooms.some(r => r.id === room.id);
                                 
+                                const isRecommendedRoomType = recommendedRoomTypeIds.includes(room.roomTypeId?.id);
+
                                 return (
                                     <>
                                     <Card 
@@ -430,9 +526,16 @@ const Booking = () => {
                                             <Col md={7}>
                                                 <Card.Body className="h-100 d-flex flex-column">
                                                     <div className="flex-grow-1">
-                                                        <Card.Title className="h5 text-primary">
-                                                            {room.roomTypeId?.name}
-                                                        </Card.Title>
+                                                        <div className="d-flex align-items-center gap-2 mb-1">
+                                                            <Card.Title className="h5 text-primary mb-0">
+                                                                Phòng {room.roomNumber} – {room.roomTypeId?.name}
+                                                            </Card.Title>
+                                                            {isRecommendedRoomType && (
+                                                                <span className="badge bg-warning text-dark">
+                                                                    Gợi ý cho bạn
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         <div className="mb-2">
                                                             <i className="fas fa-users me-2"></i>
                                                             <span>{room.roomTypeId?.capacity} khách</span>
@@ -471,7 +574,7 @@ const Booking = () => {
                                                                     size="sm"
                                                                     onClick={() => handleSelectRoom(room)}
                                                                 >
-                                                                    {isSelected ? "Bỏ chọn" : "Chọn phòng"}
+                                                                    {isSelected ? t("booking.deselectRoom") : t("booking.selectRoom")}
                                                                 </Button>
                                                             </div>
                                                         </div>
@@ -509,7 +612,9 @@ const Booking = () => {
                                                 
                                                 {services.length > 0 ? (
                                                     <div className="row g-2">
-                                                        {services.map(service => (
+                                                        {services.map(service => {
+                                                            const isRecommendedService = recommendedServiceIds.includes(service.id);
+                                                            return (
                                                             <div key={service.id} className="col-md-6">
                                                                 <div className="form-check">
                                                                     <input 
@@ -517,19 +622,28 @@ const Booking = () => {
                                                                         type="checkbox" 
                                                                         id={`service-${room.id}-${service.id}`}
                                                                         value={service.id}
+                                                                        defaultChecked={isRecommendedService}
                                                                     />
                                                                     <label 
                                                                         className="form-check-label d-flex justify-content-between w-100" 
                                                                         htmlFor={`service-${room.id}-${service.id}`}
                                                                     >
-                                                                        <span>{service.name}</span>
+                                                                        <span>
+                                                                            {service.name}
+                                                                            {isRecommendedService && (
+                                                                                <span className="ms-1 badge bg-warning text-dark">
+                                                                                    Gợi ý
+                                                                                </span>
+                                                                            )}
+                                                                        </span>
                                                                         <span className="text-primary fw-bold">
                                                                             +{service.price?.toLocaleString()} VND
                                                                         </span>
                                                                     </label>
                                                                 </div>
                                                             </div>
-                                                        ))}
+                                                            );
+                                                        })}
                                                     </div>
                                                 ) : (
                                                     <div className="text-center text-muted py-3">
@@ -594,10 +708,10 @@ const Booking = () => {
                                 <div>
                                     <h6 className="mb-3">Phòng đã chọn:</h6>
                                     {cartState.rooms.map(room => (
-                                        <div key={room.id} className="border rounded p-3 mb-2">
+                                        <div key={`${room.id}_${room.checkIn}_${room.checkOut}`} className="border rounded p-3 mb-2">
                                             <div className="d-flex justify-content-between align-items-start">
                                                 <div className="flex-grow-1">
-                                                    <div className="fw-bold">{room.roomType}</div>
+                                                    <div className="fw-bold">Phòng {room.roomNumber} – {room.roomType}</div>
                                                     <small className="text-muted">
                                                         {room.guests} khách • {room.nights} đêm
                                                     </small>

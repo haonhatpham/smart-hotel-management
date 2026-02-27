@@ -1,5 +1,7 @@
 package com.pnh.dto;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -12,6 +14,9 @@ public class ReservationCreateDTO {
     private Long customerId;
     private String status;
     private Long createdBy;
+
+    @NotNull(message = "Phải chọn ít nhất một phòng")
+    @Valid
     private List<ReservationRoomDTO> rooms;
     private List<ServiceOrderDTO> services;
 

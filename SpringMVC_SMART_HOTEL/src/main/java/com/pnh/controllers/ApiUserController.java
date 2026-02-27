@@ -29,6 +29,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.HttpClientErrorException;
+import java.util.logging.Logger;
 
 /**
  *
@@ -38,7 +39,10 @@ import org.springframework.web.client.HttpClientErrorException;
 @RequestMapping("/api")
 @CrossOrigin
 @PropertySource("classpath:gugle.properties")
+@PropertySource(value = "classpath:gugle-local.properties", ignoreResourceNotFound = true)
 public class ApiUserController {
+    private static final Logger LOG = Logger.getLogger(ApiUserController.class.getName());
+
     @Value("${client_id}")
     private String GOOGLE_CLIENT_ID;
     
@@ -63,13 +67,11 @@ public class ApiUserController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Sai thông tin đăng nhập");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(java.util.logging.Level.SEVERE, "Login error", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi server: " + e.getMessage());
         }
     }
-    
-    
-    
+
     @RequestMapping("/secure/profile")
     @ResponseBody
     @CrossOrigin
@@ -95,9 +97,7 @@ public class ApiUserController {
         try {
             RestTemplate restTemplate = new RestTemplate();
             String url = "https://oauth2.googleapis.com/tokeninfo?id_token=" + idTokenString;
-            System.out.println("[ApiUserController] Verifying Google ID token via: " + url);
             Map<?, ?> tokenInfo = restTemplate.getForObject(url, Map.class);
-            System.out.println("[ApiUserController] tokenInfo: " + tokenInfo);
             if (tokenInfo != null && GOOGLE_CLIENT_ID.equals(String.valueOf(tokenInfo.get("aud")))) {
                 String email = String.valueOf(tokenInfo.get("email"));
                 String name = tokenInfo.get("name") != null ? String.valueOf(tokenInfo.get("name")) : email;
@@ -123,16 +123,15 @@ public class ApiUserController {
 
                 return ResponseEntity.ok(response);
             } else {
-                System.err.println("[ApiUserController] Invalid ID token or audience mismatch. tokenInfo: " + tokenInfo);
+                LOG.warning("Invalid ID token or audience mismatch");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid ID token.");
             }
         } catch (HttpClientErrorException hce) {
-            // tokeninfo endpoint returned 4xx (invalid token, etc.) - include body for debugging
             String respBody = hce.getResponseBodyAsString();
-            System.err.println("[ApiUserController] tokeninfo HTTP error: " + respBody);
+            LOG.warning("Google tokeninfo HTTP error: " + respBody);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Google tokeninfo error: " + respBody);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(java.util.logging.Level.SEVERE, "Google login error", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }
     }
@@ -141,6 +140,33 @@ public class ApiUserController {
         Map<String, String> res = new HashMap<>();
         res.put("client_id", GOOGLE_CLIENT_ID);
         return ResponseEntity.ok(res);
+    }
+
+    @PostMapping("/auth/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
+        String email = body != null ? body.get("email") : null;
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email không được để trống."));
+        }
+        boolean sent = userDetailsService.requestPasswordReset(email.trim());
+        if (sent) {
+            return ResponseEntity.ok(Map.of("message", "Nếu email tồn tại, bạn sẽ nhận được link đặt lại mật khẩu."));
+        }
+        return ResponseEntity.ok(Map.of("message", "Nếu email tồn tại, bạn sẽ nhận được link đặt lại mật khẩu."));
+    }
+
+    @PostMapping("/auth/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
+        String token = body != null ? body.get("token") : null;
+        String newPassword = body != null ? body.get("newPassword") : null;
+        if (token == null || token.isBlank() || newPassword == null || newPassword.length() < 6) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Token và mật khẩu mới (ít nhất 6 ký tự) là bắt buộc."));
+        }
+        boolean ok = userDetailsService.resetPassword(token.trim(), newPassword);
+        if (ok) {
+            return ResponseEntity.ok(Map.of("message", "Đặt lại mật khẩu thành công. Bạn có thể đăng nhập bằng mật khẩu mới."));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Link không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu gửi lại email."));
     }
 }
 

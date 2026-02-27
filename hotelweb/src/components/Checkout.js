@@ -1,16 +1,20 @@
 import { useContext, useEffect, useState } from "react";
-import { Card, Button, Form, Row, Col } from "react-bootstrap";
+import { Alert, Card, Button, Form, Row, Col } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 import cookie from "react-cookies";
 import { Link, useNavigate } from "react-router-dom";
 import { MyUserContext, MyCartContext } from "../configs/MyContexts";
 import { authApis, endpoints } from "../configs/Api";
 
 const Checkout = () => {
+    const { t } = useTranslation();
     const [user] = useContext(MyUserContext);
     const [cartState, cartDispatch] = useContext(MyCartContext);
     const [, setCustomerProfile] = useState(null);
     const [agree, setAgree] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('bank_card');
+    const [loyalty, setLoyalty] = useState(null);
+    const [usePoints, setUsePoints] = useState(false);
     const [form, setForm] = useState({
         fullName: "",
         email: "",
@@ -20,6 +24,8 @@ const Checkout = () => {
     });
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [message, setMessage] = useState(null);
+    const [messageVariant, setMessageVariant] = useState("danger");
 
 
     const handleCheckout = async () => {
@@ -62,7 +68,8 @@ const Checkout = () => {
                 const paymentRes = await authApis().post(endpoints['payment-process'], {
                     reservationId,
                     amount: total,
-                    paymentMethod: paymentMethod === 'bank_card' ? 'CARD' : 'WALLET'
+                    paymentMethod: paymentMethod === 'bank_card' ? 'CARD' : 'WALLET',
+                    usePoints
                 });
                 const { paymentUrl, success, message } = paymentRes.data;
                 if (success && paymentUrl) {
@@ -76,7 +83,8 @@ const Checkout = () => {
                     
                     window.location.href = paymentUrl;
                 } else {
-                    alert(message || 'Không thể tạo thanh toán!');
+                    setMessage(message || 'Không thể tạo thanh toán!');
+                    setMessageVariant("danger");
                     setIsSubmitting(false);
                 }
             } else if (paymentMethod === 'pay_at_hotel') {
@@ -84,28 +92,36 @@ const Checkout = () => {
                 const paymentRes = await authApis().post(endpoints['payment-process'], {
                     reservationId,
                     amount: total,
-                    paymentMethod: 'CASH'
+                    paymentMethod: 'CASH',
+                    usePoints
                 });
                 
-                const { success, message } = paymentRes.data;
+                const { success, message, paymentId } = paymentRes.data;
                 if (success) {
-                    alert(message || 'Đặt phòng thành công! Vui lòng thanh toán tại quầy khi nhận phòng.');
-
                     cartDispatch({ type: "reset" });
                     const cartKey = user ? `cart_${user.id}` : 'cart_guest';
                     cookie.remove(cartKey);
                     
-                    // Đánh dấu đã hoàn thành đơn hàng
                     sessionStorage.setItem('orderCompleted', 'true');
                     
-                    navigate('/thankyou');
+                    navigate('/thankyou', {
+                        state: {
+                            success: true,
+                            method: 'CASH',
+                            orderId: paymentId,
+                            amount: total,
+                            reservationId
+                        }
+                    });
                 } else {
-                    alert(message || 'Có lỗi xảy ra khi đặt phòng!');
+                    setMessage(message || 'Có lỗi xảy ra khi đặt phòng!');
+                    setMessageVariant("danger");
                 }
                 setIsSubmitting(false);
             }
         } catch (err) {
-            alert('Có lỗi xảy ra: ' + (err?.response?.data?.message || err.message));
+            setMessage('Có lỗi xảy ra: ' + (err?.response?.data?.message || err.message));
+            setMessageVariant("danger");
             setIsSubmitting(false);
         }
     };
@@ -133,29 +149,54 @@ const Checkout = () => {
     useEffect(() => {
         const token = cookie.load('token');
         if (!token) return;
-        authApis().get(endpoints['customer-profile'])
-            .then(res => {
-                setCustomerProfile(res.data);
-                if (res.data) {
-                    setForm(prev => ({ ...prev, address: res.data.address || "" }));
+        const loadProfileAndLoyalty = async () => {
+            try {
+                const [profileRes, loyaltyRes] = await Promise.all([
+                    authApis().get(endpoints['customer-profile']),
+                    authApis().get(endpoints['loyalty'])
+                ]);
+                setCustomerProfile(profileRes.data);
+                if (profileRes.data) {
+                    setForm(prev => ({ ...prev, address: profileRes.data.address || "" }));
                 }
-            })
-            .catch(() => setCustomerProfile(null));
+                setLoyalty(loyaltyRes.data);
+            } catch (err) {
+                setCustomerProfile(null);
+                setLoyalty(null);
+            }
+        };
+        loadProfileAndLoyalty();
     }, []);
 
     const total = cartState.total;
+
+    const points = loyalty?.points || 0;
+    const POINT_VALUE = 1000; // 1 điểm = 1.000 VND
+    const MAX_DISCOUNT_PERCENT = 0.2; // tối đa 20% hóa đơn
+    const maxDiscountByPoints = points * POINT_VALUE;
+    const maxDiscountByPercent = total * MAX_DISCOUNT_PERCENT;
+    const discount = usePoints ? Math.min(maxDiscountByPoints, maxDiscountByPercent) : 0;
+    const finalTotal = Math.max(0, total - discount);
 
 
     return (
         <div className="container my-4">
             <div className="d-flex justify-content-between align-items-center mb-3">
-                <h3 className="mb-0">Thông tin đặt phòng</h3>
+                <h3 className="mb-0">{t("checkout.title")}</h3>
                 <div>
                     <Button variant="outline-secondary" size="sm" className="me-2" onClick={() => navigate(-1)}>
                         Quay lại
                     </Button>
                 </div>
             </div>
+
+            {message && (
+                <div className="mb-3">
+                    <Alert variant={messageVariant} onClose={() => setMessage(null)} dismissible>
+                        {message}
+                    </Alert>
+                </div>
+            )}
 
             {cartState.rooms.length === 0 ? (
                 <Card className="p-4 text-center">
@@ -244,7 +285,7 @@ const Checkout = () => {
                                     <Form.Check 
                                         type="checkbox"
                                         id="agree-terms"
-                                        label="Tôi đồng ý với điều khoản đặt phòng"
+                                        label={t("checkout.agreeTerms")}
                                         checked={agree}
                                         onChange={e => setAgree(e.target.checked)}
                                     />
@@ -285,10 +326,27 @@ const Checkout = () => {
                                     </div>
                                 ))}
                                 <div className="d-flex justify-content-between align-items-center mt-3">
-                                    <span className="h6 mb-0">Tổng cộng</span>
-                                    <span className="h5 text-primary fw-bold mb-0 text-nowrap">{total.toLocaleString()} VND</span>
+                                    <span className="h6 mb-0">Tạm tính</span>
+                                    <span className="h6 fw-bold mb-0 text-nowrap">{total.toLocaleString()} VND</span>
                                 </div>
-                                <div className="text-muted small">Đã bao gồm thuế và phí</div>
+                                {points > 0 && (
+                                    <div className="mt-2">
+                                        <Form.Check
+                                            type="checkbox"
+                                            id="use-loyalty"
+                                            label={`Sử dụng điểm Loyalty (hiện có ${points} điểm, tối đa giảm ${(MAX_DISCOUNT_PERCENT * 100).toFixed(0)}%)`}
+                                            checked={usePoints}
+                                            onChange={e => setUsePoints(e.target.checked)}
+                                        />
+                                        {usePoints && discount > 0 && (
+                                            <div className="mt-2 small text-muted">
+                                                <div>- Giảm giá từ điểm: <span className="text-success">-{discount.toLocaleString()} VND</span></div>
+                                                <div>Còn phải thanh toán: <strong>{finalTotal.toLocaleString()} VND</strong></div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                <div className="mt-2 text-muted small">Đã bao gồm thuế và phí</div>
                                 <Button
                                     variant="success"
                                     size="lg"

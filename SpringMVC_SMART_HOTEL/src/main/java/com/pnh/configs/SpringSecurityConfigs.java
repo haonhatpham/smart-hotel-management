@@ -7,8 +7,10 @@ package com.pnh.configs;
 import com.cloudinary.Api.HttpMethod;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -39,6 +41,9 @@ import com.pnh.filters.JwtFilter;
     "com.pnh.services"
 })
 public class SpringSecurityConfigs {
+
+    @Value("${frontend.baseUrl:http://localhost:3000}")
+    private String frontendBaseUrl;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -93,10 +98,13 @@ public class SpringSecurityConfigs {
 
      @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
         CorsConfiguration config = new CorsConfiguration();
-
-        config.setAllowedOrigins(List.of("http://localhost:3000/"));
+        List<String> origins = new ArrayList<>();
+        origins.add("http://localhost:3000");
+        if (frontendBaseUrl != null && !frontendBaseUrl.isEmpty() && !origins.contains(frontendBaseUrl)) {
+            origins.add(frontendBaseUrl);
+        }
+        config.setAllowedOrigins(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
         config.setExposedHeaders(List.of("Authorization"));

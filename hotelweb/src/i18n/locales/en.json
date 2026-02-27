@@ -1,0 +1,194 @@
+{
+  "nav": {
+    "home": "Home",
+    "roomTypes": "Room Types",
+    "services": "Services",
+    "about": "About Us",
+    "contact": "Contact",
+    "register": "Register",
+    "login": "Login",
+    "logout": "Logout",
+    "booking": "BOOK NOW",
+    "hello": "Hello",
+    "viewAllServices": "View all services",
+    "loyalty": "Loyalty",
+    "langVi": "Tiếng Việt",
+    "langEn": "English"
+  },
+  "common": {
+    "hotel": "Smart Hotel Management",
+    "bookNow": "Book now",
+    "learnMore": "Learn more",
+    "defaultRoomDesc": "Comfortable room with modern amenities",
+    "defaultServiceTagline": "Quality service"
+  },
+  "footer": {
+    "links": "Links",
+    "home": "Home",
+    "services": "Services",
+    "contact": "Contact",
+    "copyright": "© Smart Hotel Management"
+  },
+  "login": {
+    "title": "Login",
+    "welcome": "Welcome back to Smart Hotel Management",
+    "username": "Username",
+    "password": "Password",
+    "placeholderUsername": "Enter username",
+    "placeholderPassword": "Enter password",
+    "forgotPassword": "Forgot password?",
+    "submit": "Login",
+    "or": "Or",
+    "showPwd": "Show",
+    "hidePwd": "Hide",
+    "wrongCredentials": "Wrong username or password",
+    "requiredFields": "Please enter username and password!"
+  },
+  "register": {
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "email": "Email",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "placeholderLastName": "Enter last name",
+    "placeholderPhone": "Phone number",
+    "placeholderUsername": "Username",
+    "placeholderConfirm": "Confirm password"
+  },
+  "profile": {
+    "title": "Your profile",
+    "continueBooking": "Continue booking",
+    "profileInfo": "Profile information",
+    "fullName": "Full name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "dob": "Date of birth",
+    "points": "Loyalty points",
+    "viewLoyalty": "View loyalty",
+    "reservations": "Reservations",
+    "noReservations": "No reservations yet",
+    "viewDetail": "View details",
+    "reservationHistory": "Reservation history",
+    "reservationCode": "Reservation",
+    "guests": "guests",
+    "total": "Total",
+    "detail": "Details",
+    "review": "Review",
+    "prev": "Prev",
+    "next": "Next",
+    "notes": "Notes",
+    "backToProfile": "Back to profile"
+  },
+  "booking": {
+    "title": "Search rooms",
+    "missingDates": "Please select check-in and check-out dates",
+    "noRoomSelected": "Please select at least one room",
+    "noRoomsTitle": "No available rooms found",
+    "noRoomsBody": "Please try changing the dates or room type.",
+    "smartSuggestionTitle": "Smart suggestion",
+    "smartSuggestionBody": "We found the nearest date range with available rooms:",
+    "selectRoom": "Select room",
+    "deselectRoom": "Deselect"
+  },
+  "checkout": {
+    "title": "Booking information",
+    "createPaymentFailed": "Unable to create payment!",
+    "cashBookingFailed": "An error occurred while creating your booking!",
+    "genericErrorPrefix": "An error occurred:",
+    "agreeTerms": "I agree to the booking terms"
+  },
+  "thankyou": {
+    "successTitle": "Payment successful",
+    "failureTitle": "Payment failed",
+    "successText": "Thank you for booking with our hotel.",
+    "failureText": "Unfortunately your payment was not successful. Please try again or contact support.",
+    "transactionInfo": "Transaction information",
+    "paymentCode": "Payment ID:",
+    "reservationCode": "Reservation ID:",
+    "method": "Method:",
+    "amount": "Amount:",
+    "noData": "No transaction data. You can go back to the home page.",
+    "viewReservation": "View reservation",
+    "retryBooking": "Try booking again",
+    "backHome": "Back to home",
+    "continueBooking": "Continue booking",
+    "newBooking": "New booking"
+  },
+  "contact": {
+    "title": "Contact",
+    "address": "Address",
+    "directions": "Get directions on Google Maps",
+    "hotline": "Hotline",
+    "email": "Email"
+  },
+  "services": {
+    "title": "Hotel Services",
+    "subtitle": "Additional services during your stay",
+    "viewDetail": "View details"
+  },
+  "forgotPassword": {
+    "title": "Forgot password",
+    "description": "Enter your account email. We will send a password reset link (valid 1 hour).",
+    "emailLabel": "Email",
+    "sending": "Sending...",
+    "submit": "Send reset link",
+    "backToLogin": "Back to login",
+    "requiredEmail": "Please enter your email.",
+    "successDefault": "If the email exists, you will receive a reset link shortly.",
+    "failDefault": "Request failed. Please try again."
+  },
+  "resetPassword": {
+    "title": "Reset password",
+    "processing": "Processing...",
+    "submit": "Reset password",
+    "missingToken": "Missing reset link. Please use the link from the email.",
+    "requestAgain": "Request new link",
+    "newPasswordLabel": "New password (at least 6 characters)",
+    "confirmLabel": "Confirm password",
+    "minLength": "New password must be at least 6 characters.",
+    "mismatch": "Passwords do not match.",
+    "successDefault": "Password reset successfully.",
+    "failDefault": "Reset failed. Link may have expired.",
+    "cancel": "Cancel"
+  },
+  "reservationDetail": {
+    "notFound": "Reservation not found",
+    "back": "Back"
+  },
+  "review": {
+    "submitError": "Failed to submit review",
+    "alreadySubmitted": "Review submitted for order",
+    "alreadySubmittedNote": "You can only review each order once.",
+    "title": "Review order",
+    "rating": "Rating",
+    "comment": "Comment",
+    "commentPlaceholder": "Your review...",
+    "send": "Submit review",
+    "cancel": "Cancel"
+  },
+  "loyalty": {
+    "reasonDefault": "Points from booking"
+  },
+  "chat": {
+    "roomPrice": "Room rates",
+    "policyCancel": "Cancellation policy",
+    "servicesBuffet": "Services & buffet",
+    "howToBook": "How to book",
+    "contactHotel": "Contact hotel",
+    "openLabel": "Open chat assistant",
+    "assistantTitle": "Chat assistant"
+  },
+  "about": {
+    "location": "Convenient location",
+    "service": "Dedicated service",
+    "amenities": "Premium amenities",
+    "quality": "Recognized quality",
+    "yearsExp": "Years of experience",
+    "rooms": "Rooms",
+    "guests": "Satisfied guests",
+    "avgRating": "Average rating"
+  }
+}

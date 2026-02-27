@@ -61,6 +61,12 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Users updateUser(Users u) {
+        Session s = this.factory.getObject().getCurrentSession();
+        return (Users) s.merge(u);
+    }
+
+    @Override
     public boolean authenticate(String username, String password) {
         Users u = this.getUserByUsername(username);
         if (u == null) {
@@ -83,6 +89,30 @@ public class UserRepositoryImpl implements UserRepository {
                 .where(cb.equal(root.get("username"), username));
 
         return s.createQuery(cq).uniqueResult();
+    }
+
+    @Override
+    public CustomerProfiles getCustomerProfileByUserId(Long userId) {
+        Session s = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder cb = s.getCriteriaBuilder();
+        CriteriaQuery<CustomerProfiles> cq = cb.createQuery(CustomerProfiles.class);
+        Root<CustomerProfiles> root = cq.from(CustomerProfiles.class);
+        cq.select(root).where(cb.equal(root.get("userId").get("id"), userId));
+        try {
+            return s.createQuery(cq).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public CustomerProfiles saveCustomerProfile(CustomerProfiles profile) {
+        Session s = this.factory.getObject().getCurrentSession();
+        if (profile.getId() == null) {
+            s.persist(profile);
+            return profile;
+        }
+        return s.merge(profile);
     }
 
     @Override

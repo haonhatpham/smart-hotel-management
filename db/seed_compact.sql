@@ -13,6 +13,7 @@ TRUNCATE TABLE invoices;
 TRUNCATE TABLE service_orders;
 TRUNCATE TABLE reservation_rooms;
 TRUNCATE TABLE reservations;
+TRUNCATE TABLE loyalty_log;
 TRUNCATE TABLE housekeeping_tasks;
 TRUNCATE TABLE rooms;
 TRUNCATE TABLE room_types;
@@ -53,14 +54,14 @@ INSERT INTO room_types (name, price, capacity, description, active) VALUES
 INSERT INTO rooms (room_number, room_type_id, floor, status, note, image_url) VALUES
  ('101',(SELECT id FROM room_types WHERE name='Standard'),1,'AVAILABLE','', 'https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=1200&auto=format'),
  ('102',(SELECT id FROM room_types WHERE name='Standard'),1,'AVAILABLE','', 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format'),
- ('103',(SELECT id FROM room_types WHERE name='Standard'),1,'AVAILABLE','', 'https://images.unsplash.com/photo-1505691723518-36a5ac3b2d95?q=80&w=1200&auto=format'),
+('103',(SELECT id FROM room_types WHERE name='Standard'),1,'AVAILABLE','', 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format'),
  ('104',(SELECT id FROM room_types WHERE name='Standard'),1,'AVAILABLE','', 'https://images.unsplash.com/photo-1540518614846-7eded433c457?q=80&w=1200&auto=format'),
  ('105',(SELECT id FROM room_types WHERE name='Standard'),1,'AVAILABLE','', 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=1200&auto=format'),
  ('201',(SELECT id FROM room_types WHERE name='Deluxe'),2,'AVAILABLE','', 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1200&auto=format'),
  ('202',(SELECT id FROM room_types WHERE name='Deluxe'),2,'AVAILABLE','', 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=1200&auto=format'),
- ('203',(SELECT id FROM room_types WHERE name='Deluxe'),2,'AVAILABLE','', 'https://images.unsplash.com/photo-1551776235-dde6d4829808?q=80&w=1200&auto=format'),
- ('301',(SELECT id FROM room_types WHERE name='Suite'),3,'AVAILABLE','', 'https://images.unsplash.com/photo-1501117716987-c8e98ddb0f41?q=80&w=1200&auto=format'),
- ('302',(SELECT id FROM room_types WHERE name='Suite'),3,'AVAILABLE','', 'https://images.unsplash.com/photo-1505691723518-36a5ac3b2d95?q=80&w=1200&auto=format');
+('203',(SELECT id FROM room_types WHERE name='Deluxe'),2,'AVAILABLE','', 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=1200&auto=format'),
+('301',(SELECT id FROM room_types WHERE name='Suite'),3,'AVAILABLE','', 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1200&auto=format'),
+('302',(SELECT id FROM room_types WHERE name='Suite'),3,'AVAILABLE','', 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=1200&auto=format');
 
 -- Dịch vụ (tham khảo)
 INSERT INTO services (name, price, description, active) VALUES
@@ -242,6 +243,17 @@ INSERT INTO reservation_rooms (reservation_id, room_id, check_in, check_out, pri
 INSERT INTO invoices VALUES (NULL,(SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-12-24'), 19000000,'2025-12-29 10:00:00');
 INSERT INTO payments (reservation_id, amount, method, transaction_id, status, paid_at)
 VALUES ((SELECT id FROM reservations WHERE customer_id=(SELECT id FROM users WHERE username='bob') AND check_in='2025-12-24'), 19000000, 'CARD', 'TXL-2025-12', 'SUCCESS', '2025-12-29 10:05:00');
+
+-- =============== Loyalty: lịch sử tích điểm (1 điểm / 10.000 VND) + cập nhật customer_profiles.loyalty_point ===============
+INSERT INTO loyalty_log (user_id, points, reason, reservation_id, created_at)
+SELECT r.customer_id, FLOOR(p.amount/10000), CONCAT('Tích điểm từ đặt phòng #', r.id), r.id, p.paid_at
+FROM reservations r
+JOIN payments p ON p.reservation_id = r.id
+WHERE p.status = 'SUCCESS';
+
+UPDATE customer_profiles cp
+JOIN (SELECT user_id, SUM(points) AS total FROM loyalty_log GROUP BY user_id) t ON cp.user_id = t.user_id
+SET cp.loyalty_point = t.total;
 
 -- Housekeeping tasks cho các phòng đã checkout
 INSERT INTO housekeeping_tasks (room_id, task, status, assignee_id, created_at, updated_at) VALUES

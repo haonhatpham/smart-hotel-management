@@ -46,9 +46,6 @@ public class RoomServiceImpl implements RoomService {
             UserDetails userDetails = (UserDetails) auth.getPrincipal();
             String role = userDetails.getAuthorities().iterator().next().getAuthority();
             
-            // Debug: In ra role để kiểm tra
-            System.out.println("Current user role: " + role);
-
             if ("ROLE_CUSTOMER".equals(role)) {
                 params.put("status", "AVAILABLE");
             } else {
@@ -121,4 +118,38 @@ public class RoomServiceImpl implements RoomService {
         return this.roomRepository.countByRoomType(roomTypeId);
     }
 
+    @Override
+    public LocalDate[] findNearestAvailableRange(LocalDate checkIn, LocalDate checkOut,
+                                                 Integer minCapacity, Long roomTypeId, int maxDaysScan) {
+        if (checkIn == null || checkOut == null || !checkIn.isBefore(checkOut)) {
+            return null;
+        }
+
+        // Giới hạn maxDaysScan hợp lý (1–90 ngày)
+        if (maxDaysScan <= 0 || maxDaysScan > 90) {
+            maxDaysScan = 30;
+        }
+
+        for (int i = 1; i <= maxDaysScan; i++) {
+            LocalDate newCheckIn = checkIn.plusDays(i);
+            LocalDate newCheckOut = checkOut.plusDays(i);
+
+            Map<String, String> params = new java.util.HashMap<>();
+            params.put("checkIn", newCheckIn.toString());
+            params.put("checkOut", newCheckOut.toString());
+            if (minCapacity != null) {
+                params.put("minCapacity", String.valueOf(minCapacity));
+            }
+            if (roomTypeId != null) {
+                params.put("roomTypeId", String.valueOf(roomTypeId));
+            }
+
+            List<Rooms> rooms = this.roomRepository.getRooms(params);
+            if (rooms != null && !rooms.isEmpty()) {
+                return new LocalDate[]{newCheckIn, newCheckOut};
+            }
+        }
+
+        return null;
+    }
 }

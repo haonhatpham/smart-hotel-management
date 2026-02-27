@@ -9,12 +9,17 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.Authenticator;
 import jakarta.mail.PasswordAuthentication;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class MailUtil {
 
-    public static void sendMail(String to, String subject, String text) {
-        final String from = "hieuthuhai11b3@gmail.com"; // Gmail của bạn
-        final String password = "tmfb ykoh lmkv rzlw"; // App Password nếu dùng Gmail
+    private static final Logger LOG = Logger.getLogger(MailUtil.class.getName());
+
+    public static void sendMail(String to, String subject, String htmlContent) {
+        final String from = "haopham081098@gmail.com"; // Gmail của bạn
+        final String password = "jtna nttl wcqb ihig"; // App Password nếu dùng Gmail
+
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -27,21 +32,20 @@ public class MailUtil {
                 return new PasswordAuthentication(from, password);
             }
         });
-        session.setDebug(true);  
+        session.setDebug(false);  
         try {
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(from));
             message.setRecipients(
                 Message.RecipientType.TO, InternetAddress.parse(to));
             message.setSubject(subject);
-            message.setText(text);
+            message.setContent(htmlContent, "text/html; charset=UTF-8");
 
             Transport.send(message);
-            System.out.println("Email đã gửi tới: " + to);
+            LOG.fine("Email sent to: " + to);
 
         } catch (MessagingException e) {
-            e.printStackTrace();
-            System.err.println("Gửi email thất bại: " + e.getMessage());
+            LOG.log(Level.WARNING, "Send mail failed: " + e.getMessage(), e);
         }
     }
 }

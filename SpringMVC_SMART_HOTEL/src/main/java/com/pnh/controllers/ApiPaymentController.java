@@ -7,10 +7,14 @@ package com.pnh.controllers;
 import com.pnh.pojo.Invoices;
 import com.pnh.pojo.Payments;
 import com.pnh.pojo.Reservations;
+import com.pnh.pojo.Users;
 import com.pnh.services.InvoiceService;
+import com.pnh.services.LoyaltyService;
 import com.pnh.services.PaymentService;
 import com.pnh.services.ReservationService;
+import com.pnh.services.UserService;
 import java.net.URLEncoder;
+import java.security.Principal;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,6 +41,7 @@ import java.math.BigDecimal;
 import java.util.stream.Collectors;
 import org.hibernate.Hibernate;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.logging.Logger;
 
 /**
  *
@@ -47,6 +52,8 @@ import org.springframework.transaction.annotation.Transactional;
 @CrossOrigin
 public class ApiPaymentController {
 
+    private static final Logger LOG = Logger.getLogger(ApiPaymentController.class.getName());
+
     @Autowired
     private PaymentService paymentService;
 
@@ -56,17 +63,51 @@ public class ApiPaymentController {
     @Autowired
     private InvoiceService invoiceSerive;
 
+    @Autowired
+    private LoyaltyService loyaltyService;
+
+    @Autowired
+    private UserService userService;
+
     @Value("${vnpay.hashSecret}")
     private String vnpayHashSecret;
     @Value("${frontend.baseUrl}")
     private String frontendBaseUrl;
 
-    @PostMapping("/process")
-    public ResponseEntity<?> processPayment(@RequestBody Map<String, Object> paymentRequest) {
+    private boolean canAccessReservation(Reservations r, Users currentUser) {
+        if (currentUser == null || r == null || r.getCustomerId() == null) return false;
+        if (r.getCustomerId().getId().equals(currentUser.getId())) return true;
+        String role = currentUser.getRole() != null ? currentUser.getRole() : "";
+        return "ADMIN".equals(role) || "RECEPTION".equals(role);
+    }
+
+    @PostMapping("/secure/process")
+    public ResponseEntity<?> processPayment(Principal principal, @RequestBody Map<String, Object> paymentRequest) {
         try {
+            if (principal == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                        "success", false,
+                        "message", "Chưa đăng nhập"
+                ));
+            }
+            Users currentUser = userService.getUserByUsername(principal.getName());
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                        "success", false,
+                        "message", "Không tìm thấy người dùng"
+                ));
+            }
+
             Number reservationIdNum = (Number) paymentRequest.get("reservationId");
             Number amountNum = (Number) paymentRequest.get("amount");
             String paymentMethod = (String) paymentRequest.get("paymentMethod");
+            Object usePointsRaw = paymentRequest.get("usePoints");
+            boolean usePoints = false;
+            if (usePointsRaw instanceof Boolean) {
+                usePoints = (Boolean) usePointsRaw;
+            } else if (usePointsRaw instanceof String) {
+                usePoints = Boolean.parseBoolean((String) usePointsRaw);
+            }
 
             if (reservationIdNum == null || amountNum == null || paymentMethod == null) {
                 return ResponseEntity.badRequest().body(Map.of(
@@ -77,6 +118,7 @@ public class ApiPaymentController {
 
             Long reservationId = reservationIdNum.longValue();
             Double amount = amountNum.doubleValue();
+            BigDecimal originalAmount = BigDecimal.valueOf(amount);
 
             Reservations reservation = reservationService.getById(reservationId);
             if (reservation == null) {
@@ -85,10 +127,28 @@ public class ApiPaymentController {
                         "message", "Đặt phòng không tồn tại"
                 ));
             }
+            if (!canAccessReservation(reservation, currentUser)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                        "success", false,
+                        "message", "Bạn không có quyền thanh toán đơn này"
+                ));
+            }
+
+            // Áp dụng đổi điểm nếu người dùng chọn sử dụng loyalty
+            BigDecimal finalAmount = originalAmount;
+            Long customerId = reservation.getCustomerId() != null ? reservation.getCustomerId().getId() : null;
+            if (usePoints && customerId != null) {
+                try {
+                    finalAmount = loyaltyService.applyRedemption(customerId, reservationId, originalAmount);
+                } catch (Exception ex) {
+                    LOG.log(java.util.logging.Level.WARNING, "Loyalty redemption failed", ex);
+                    finalAmount = originalAmount;
+                }
+            }
 
             Payments payment = new Payments();
             payment.setReservationId(reservation);
-            payment.setAmount(java.math.BigDecimal.valueOf(amount));
+            payment.setAmount(finalAmount);
             payment.setMethod(paymentMethod);
             payment.setCreatedAt(new Date());
             payment.setStatus("PENDING");
@@ -97,10 +157,10 @@ public class ApiPaymentController {
 
             String paymentUrl;
             if ("WALLET".equalsIgnoreCase(paymentMethod)) {
-                paymentUrl = paymentService.createMoMoPaymentUrl(savedPayment.getId(), amount);
+                paymentUrl = paymentService.createMoMoPaymentUrl(savedPayment.getId(), finalAmount.doubleValue());
                 paymentService.updatePaymentStatus(savedPayment.getId(), "PENDING");
             } else if ("CARD".equalsIgnoreCase(paymentMethod)) {
-                paymentUrl = paymentService.createVNPayPaymentUrl(savedPayment.getId(), amount);
+                paymentUrl = paymentService.createVNPayPaymentUrl(savedPayment.getId(), finalAmount.doubleValue());
                 paymentService.updatePaymentStatus(savedPayment.getId(), "PENDING");
             } else if ("CASH".equalsIgnoreCase(paymentMethod)) {
                 // Thanh toán tại quầy: đánh dấu là SUCCESS và cập nhật reservation
@@ -115,8 +175,27 @@ public class ApiPaymentController {
 
                 invoiceSerive.save(invoice);
 
+                try {
+                    Long cashCustomerId = reservation.getCustomerId() != null ? reservation.getCustomerId().getId() : null;
+                    if (cashCustomerId != null && payment.getAmount() != null) {
+                        loyaltyService.addPoints(cashCustomerId, reservation.getId(), payment.getAmount());
+                    }
+                } catch (Exception e) {
+                    LOG.log(java.util.logging.Level.WARNING, "Loyalty addPoints failed", e);
+                }
+
+                try {
+                    String email = reservation.getCustomerId() != null ? reservation.getCustomerId().getEmail() : null;
+                    if (email != null) {
+                        String[] subjBody = buildBookingConfirmationEmail(reservation, payment.getAmount());
+                        MailUtil.sendMail(email, subjBody[0], subjBody[1]);
+                    }
+                } catch (Exception mailEx) {
+                    LOG.log(java.util.logging.Level.WARNING, "Send booking email failed", mailEx);
+                }
+
                 String successUrl = frontendBaseUrl + "/thankyou/result?success=true&method=" + paymentMethod
-                        + "&orderId=" + savedPayment.getId() + (amount != null ? "&amount=" + amount : "");
+                        + "&orderId=" + savedPayment.getId() + (finalAmount != null ? "&amount=" + finalAmount : "");
 
                 return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                         "success", true,
@@ -143,6 +222,7 @@ public class ApiPaymentController {
             ));
 
         } catch (Exception e) {
+            LOG.log(java.util.logging.Level.SEVERE, "processPayment error", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "success", false,
                     "message", "Có lỗi xảy ra: " + e.getMessage()
@@ -199,27 +279,21 @@ public class ApiPaymentController {
                         invoice.setTotalAmount(payment.getAmount());
                         invoiceSerive.save(invoice);
                         try {
-          
-                            String serviceOrdersDetails = reservationService.getServiceOrders(r.getId()).stream()
-                                .map(order -> "Dịch vụ: " + order.getServiceId().getName()
-                                             + " (Giá: " + order.getAmount()+ ")")
-                                .collect(Collectors.joining(", "));
+                            Long customerId = r.getCustomerId() != null ? r.getCustomerId().getId() : null;
+                            if (customerId != null && payment.getAmount() != null) {
+                                loyaltyService.addPoints(customerId, r.getId(), payment.getAmount());
+                            }
+                        } catch (Exception e) {
+                            LOG.log(java.util.logging.Level.WARNING, "Loyalty addPoints in IPN failed", e);
+                        }
+                        try {
                             String email = r.getCustomerId().getEmail();
-                            String roomDetails = reservationService.getReservationsRoomByReservationsId(r.getId()).stream()
-                                    .map(room -> "Phòng " + room.getRoomId().getRoomNumber()
-                                    + " (Nhận: " + r.getCheckIn()
-                                    + ", Trả: " + r.getCheckOut() + ")")
-                                    .collect(Collectors.joining(", "));
-
-                            String subject = "Thanh toán thành công";
-                            String body = "Bạn đã thanh toán " + payment.getAmount()
-                                    + " cho: " + roomDetails + serviceOrdersDetails;
-
-                            MailUtil.sendMail(email, subject, body);
-                            System.out.println(" Đã gửi mail xác nhận cho: " + email);
+                            if (email != null) {
+                                String[] subjBody = buildBookingConfirmationEmail(r, payment.getAmount());
+                                MailUtil.sendMail(email, subjBody[0], subjBody[1]);
+                            }
                         } catch (Exception mailEx) {
-                            mailEx.printStackTrace();
-                            System.err.println("Không gửi được email xác nhận, nhưng vẫn cập nhật trạng thái");
+                            LOG.log(java.util.logging.Level.WARNING, "Send mail in IPN failed", mailEx);
                         }
                     }
                 } else {
@@ -231,7 +305,7 @@ public class ApiPaymentController {
             return ResponseEntity.ok("IPN received");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(java.util.logging.Level.SEVERE, "MoMo IPN error", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("ERROR");
         }
     }
@@ -289,27 +363,21 @@ public class ApiPaymentController {
                     if (r != null) {
                         reservationService.updateStatus(r.getId(), "CONFIRMED");
                         try {
+                            Long customerId = r.getCustomerId() != null ? r.getCustomerId().getId() : null;
+                            if (customerId != null && payment.getAmount() != null) {
+                                loyaltyService.addPoints(customerId, r.getId(), payment.getAmount());
+                            }
+                        } catch (Exception e) {
+                            LOG.log(java.util.logging.Level.WARNING, "Loyalty addPoints in VNPay callback failed", e);
+                        }
+                        try {
                             String email = r.getCustomerId().getEmail();
-                              String serviceOrdersDetails = reservationService.getServiceOrders(r.getId()).stream()
-                                .map(order -> "Dịch vụ: " + order.getServiceId().getName()
-                                             + " (Giá: " + order.getAmount()+ ")")
-                                .collect(Collectors.joining(", "));
-                    
-                            String roomDetails = reservationService.getReservationsRoomByReservationsId(r.getId()).stream()
-                                    .map(rr -> "Phòng " + rr.getRoomId().getRoomNumber()
-                                    + " (Nhận: " + r.getCheckIn()
-                                    + ", Trả: " + r.getCheckOut() + ")")
-                                    .collect(Collectors.joining(", "));
-
-                            String subject = "Thanh toán thành công";
-                            String body = "Bạn đã thanh toán " + payment.getAmount()
-                                    + " cho: " + roomDetails+ serviceOrdersDetails;
-
-                            MailUtil.sendMail(email, subject, body);
-                            System.out.println(" Đã gửi mail xác nhận cho: " + email);
+                            if (email != null) {
+                                String[] subjBody = buildBookingConfirmationEmail(r, payment.getAmount());
+                                MailUtil.sendMail(email, subjBody[0], subjBody[1]);
+                            }
                         } catch (Exception mailEx) {
-                            mailEx.printStackTrace();
-                            System.err.println("Không gửi được email xác nhận, nhưng vẫn cập nhật trạng thái");
+                            LOG.log(java.util.logging.Level.WARNING, "Send mail in VNPay callback failed", mailEx);
                         }
 
                     }
@@ -370,6 +438,65 @@ public class ApiPaymentController {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /** Xác nhận đặt phòng + nhắc check-in + link chi tiết & đánh giá (HTML đẹp) */
+    private String[] buildBookingConfirmationEmail(Reservations r, BigDecimal amount) {
+        String detailUrl = frontendBaseUrl + "/reservations/" + r.getId();
+        String reviewUrl = frontendBaseUrl + "/reservations/" + r.getId() + "/review";
+
+        String roomDetails = reservationService.getReservationsRoomByReservationsId(r.getId()).stream()
+                .map(rr -> "Phòng " + rr.getRoomId().getRoomNumber()
+                        + " (Nhận: " + r.getCheckIn() + ", Trả: " + r.getCheckOut() + ")")
+                .collect(Collectors.joining("<br/>"));
+        String serviceDetails = reservationService.getServiceOrders(r.getId()).stream()
+                .map(order -> order.getServiceId().getName() + " (" + order.getAmount() + " VND)")
+                .collect(Collectors.joining("<br/>"));
+
+        String subject = "Smart Hotel - Xác nhận đặt phòng #" + r.getId();
+
+        StringBuilder body = new StringBuilder();
+        body.append("<!DOCTYPE html><html><head>")
+                .append("<meta charset='UTF-8'/>")
+                .append("<title>").append(subject).append("</title>")
+                .append("</head><body style='font-family: Arial, sans-serif; background-color:#f5f5f5; padding:16px;'>")
+                .append("<div style='max-width:600px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e0e0e0;'>")
+                .append("<div style='background:#0d6efd;color:#fff;padding:16px 20px;'>")
+                .append("<h2 style='margin:0;font-size:20px;'>Smart Hotel</h2>")
+                .append("<p style='margin:4px 0 0;'>Xác nhận đặt phòng thành công</p>")
+                .append("</div>")
+                .append("<div style='padding:16px 20px;'>")
+                .append("<p>Chào quý khách,</p>")
+                .append("<p>Cảm ơn bạn đã đặt phòng tại <strong>Smart Hotel</strong>. Thông tin đặt phòng của bạn như sau:</p>")
+                .append("<p><strong>Mã đặt phòng:</strong> #").append(r.getId()).append("<br/>")
+                .append("<strong>Tổng thanh toán:</strong> ")
+                .append(amount != null ? amount.toString() : "").append(" VND<br/>")
+                .append("<strong>Ngày nhận phòng:</strong> ").append(r.getCheckIn()).append("<br/>")
+                .append("<strong>Ngày trả phòng:</strong> ").append(r.getCheckOut()).append("</p>")
+                .append("<hr style='border:none;border-top:1px solid #e0e0e0;margin:12px 0;'/>")
+                .append("<h4 style='margin:0 0 8px;'>Phòng</h4>")
+                .append("<p style='margin:0;'>").append(roomDetails).append("</p>");
+
+        if (!serviceDetails.isEmpty()) {
+            body.append("<h4 style='margin:16px 0 8px;'>Dịch vụ</h4>")
+                    .append("<p style='margin:0;'>").append(serviceDetails).append("</p>");
+        }
+
+        body.append("<hr style='border:none;border-top:1px solid #e0e0e0;margin:12px 0;'/>")
+                .append("<p><strong>Nhắc check-in:</strong> Bạn vui lòng đến quầy lễ tân vào ngày ")
+                .append(r.getCheckIn()).append(" để nhận phòng.</p>")
+                .append("<p>")
+                .append("<a href='").append(detailUrl).append("' ")
+                .append("style='display:inline-block;padding:10px 16px;background:#0d6efd;color:#fff;text-decoration:none;border-radius:4px;margin-right:8px;'>")
+                .append("Xem chi tiết đặt phòng</a>")
+                .append("<a href='").append(reviewUrl).append("' ")
+                .append("style='display:inline-block;padding:10px 16px;background:#198754;color:#fff;text-decoration:none;border-radius:4px;'>")
+                .append("Viết đánh giá sau khi trả phòng</a>")
+                .append("</p>")
+                .append("<p style='margin-top:16px;'>Trân trọng,<br/>Smart Hotel</p>")
+                .append("</div></div></body></html>");
+
+        return new String[]{subject, body.toString()};
     }
 
 }

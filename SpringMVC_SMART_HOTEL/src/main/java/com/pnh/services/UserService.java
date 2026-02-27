@@ -24,8 +24,16 @@ public interface UserService extends UserDetailsService {
     boolean authenticate(String username, String password);
 
     CustomerProfiles getCustomerProfile(String username);
+    CustomerProfiles getCustomerProfileByUserId(Long userId);
+    CustomerProfiles saveCustomerProfile(CustomerProfiles profile);
 
-    public Users getUserByEmail(String email);
-    
-    public Users createUserFromGoogle(String email, String name, String pictureUrl);
+    Users getUserByEmail(String email);
+
+    Users createUserFromGoogle(String email, String name, String pictureUrl);
+
+    /** Gửi email chứa link đặt lại mật khẩu. Trả về true nếu gửi thành công (email tồn tại). */
+    boolean requestPasswordReset(String email);
+
+    /** Đặt lại mật khẩu bằng token từ email. Trả về true nếu thành công. */
+    boolean resetPassword(String token, String newPassword);
 }

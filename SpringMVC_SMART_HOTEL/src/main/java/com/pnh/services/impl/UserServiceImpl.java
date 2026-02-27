@@ -4,16 +4,22 @@
  */
 package com.pnh.services.impl;
 
+import com.pnh.pojo.PasswordResetToken;
 import com.pnh.pojo.Users;
 import com.pnh.pojo.CustomerProfiles;
+import com.pnh.repositories.PasswordResetTokenRepository;
 import com.pnh.repositories.UserRepository;
 import com.pnh.services.UserService;
+import com.pnh.utils.MailUtil;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Date;
+import java.util.UUID;
+import java.util.Calendar;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -33,12 +39,21 @@ import java.util.logging.Logger;
 @Service
 public class UserServiceImpl implements UserService {
 
+    private static final Logger LOG = Logger.getLogger(UserServiceImpl.class.getName());
+
     @Autowired
     private UserRepository userRepo;
+    @Autowired
+    private PasswordResetTokenRepository resetTokenRepo;
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
     @Autowired
     private Cloudinary cloudinary;
+
+    @Value("${frontend.baseUrl:http://localhost:3000}")
+    private String frontendBaseUrl;
+
+    private static final int RESET_TOKEN_VALID_HOURS = 1;
 
     @Override
     public Users getUserByUsername(String username) {
@@ -55,11 +70,8 @@ public class UserServiceImpl implements UserService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Users u = this.getUserByUsername(username);
         if (u == null) {
-            System.out.println("[AUTH DEBUG] user not found");
             throw new UsernameNotFoundException("Invalid username");
         }
-        System.out.println("[AUTH DEBUG] user found: id=" + u.getId() + ", role=" + u.getRole() + ", enabled=" + u.getEnabled());
-        System.out.println("[AUTH DEBUG] stored hash =" + (u.getPassword()));
         Set<GrantedAuthority> authorities = new HashSet<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_" + u.getRole()));
 
@@ -102,6 +114,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public CustomerProfiles getCustomerProfileByUserId(Long userId) {
+        return this.userRepo.getCustomerProfileByUserId(userId);
+    }
+
+    @Override
+    public CustomerProfiles saveCustomerProfile(CustomerProfiles profile) {
+        return this.userRepo.saveCustomerProfile(profile);
+    }
+
+    @Override
     public Users getUserByEmail(String email) {
         return this.userRepo.getUserByEmail(email);
     }
@@ -130,5 +152,45 @@ public class UserServiceImpl implements UserService {
             u.setAvatar(avatarUrl);
         }
         return this.userRepo.addUser(u);
+    }
+
+    @Override
+    public boolean requestPasswordReset(String email) {
+        if (email == null || email.isBlank()) return false;
+        Users u = userRepo.getUserByEmail(email.trim());
+        if (u == null) return false;
+        resetTokenRepo.deleteExpired();
+        String token = UUID.randomUUID().toString().replace("-", "");
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.HOUR, RESET_TOKEN_VALID_HOURS);
+        PasswordResetToken prt = new PasswordResetToken();
+        prt.setUserId(u.getId());
+        prt.setToken(token);
+        prt.setExpiresAt(cal.getTime());
+        prt.setCreatedAt(new Date());
+        resetTokenRepo.save(prt);
+        String link = (frontendBaseUrl != null ? frontendBaseUrl.trim().replaceAll("/$", "") : "http://localhost:3000") + "/reset-password?token=" + token;
+        String subject = "Smart Hotel - Đặt lại mật khẩu";
+        String html = "<p>Xin chào,</p><p>Bạn đã yêu cầu đặt lại mật khẩu. Bấm vào link sau (có hiệu lực " + RESET_TOKEN_VALID_HOURS + " giờ):</p>"
+                + "<p><a href=\"" + link + "\">Đặt lại mật khẩu</a></p><p>Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>";
+        try {
+            MailUtil.sendMail(u.getEmail(), subject, html);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean resetPassword(String token, String newPassword) {
+        if (token == null || token.isBlank() || newPassword == null || newPassword.length() < 6) return false;
+        PasswordResetToken prt = resetTokenRepo.findByToken(token.trim());
+        if (prt == null || prt.getExpiresAt().before(new Date())) return false;
+        Users u = userRepo.getById(prt.getUserId());
+        if (u == null) return false;
+        u.setPassword(passwordEncoder.encode(newPassword));
+        userRepo.updateUser(u);
+        resetTokenRepo.deleteByToken(token);
+        return true;
     }
 }

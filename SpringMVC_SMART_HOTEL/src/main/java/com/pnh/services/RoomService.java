@@ -33,4 +33,18 @@ public interface RoomService {
     
 
     long countByRoomType(Long roomTypeId);
+
+    /**
+     * Tìm khoảng ngày gần nhất trong tương lai còn phòng phù hợp
+     * so với khoảng check-in/check-out mong muốn.
+     *
+     * @param checkIn     ngày nhận phòng mong muốn
+     * @param checkOut    ngày trả phòng mong muốn
+     * @param minCapacity số khách tối thiểu (có thể null)
+     * @param roomTypeId  loại phòng ưu tiên (có thể null)
+     * @param maxDaysScan số ngày tối đa quét về phía trước
+     * @return mảng 2 phần tử [checkInĐềXuất, checkOutĐềXuất] hoặc null nếu không tìm thấy
+     */
+    LocalDate[] findNearestAvailableRange(LocalDate checkIn, LocalDate checkOut,
+                                          Integer minCapacity, Long roomTypeId, int maxDaysScan);
 }

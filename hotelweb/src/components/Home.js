@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Alert, Button, Card, Col, Row, Spinner } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 import Apis, { endpoints } from "../configs/Api";
 import { useSearchParams, Link } from "react-router-dom";
 
 const Home = () => {
+    const { t } = useTranslation();
     const [rooms, setRooms] = useState([]);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
@@ -37,7 +39,6 @@ const Home = () => {
                 setHasMore(false);
             }
         } catch (ex) {
-            console.error("error:", ex);
         } finally {
             setLoading(false);
         }
@@ -96,7 +97,7 @@ const Home = () => {
                                     Phòng {room.roomNumber} - {room.roomTypeId?.name}
                                 </Card.Title>
                                 <Card.Text className="flex-grow-1">
-                                    {room.roomTypeId?.description || room.note || "Phòng thoải mái với đầy đủ tiện nghi hiện đại"}
+                                    {room.roomTypeId?.description || room.note || t("common.defaultRoomDesc")}
                                 </Card.Text>
                                 <div className="mb-3">
                                     <span className="badge bg-success me-2">{room.status}</span>

@@ -1,0 +1,194 @@
+{
+  "nav": {
+    "home": "Trang chủ",
+    "roomTypes": "Loại phòng",
+    "services": "Dịch vụ",
+    "about": "Về chúng tôi",
+    "contact": "Liên hệ",
+    "register": "Đăng ký",
+    "login": "Đăng nhập",
+    "logout": "Đăng xuất",
+    "booking": "ĐẶT PHÒNG",
+    "hello": "Chào",
+    "viewAllServices": "Xem tất cả dịch vụ",
+    "loyalty": "Hạng thành viên",
+    "langVi": "Tiếng Việt",
+    "langEn": "English"
+  },
+  "common": {
+    "hotel": "Smart Hotel Management",
+    "bookNow": "Đặt phòng ngay",
+    "learnMore": "Xem chi tiết",
+    "defaultRoomDesc": "Phòng thoải mái với đầy đủ tiện nghi hiện đại",
+    "defaultServiceTagline": "Dịch vụ chất lượng cao"
+  },
+  "footer": {
+    "links": "Liên kết",
+    "home": "Trang chủ",
+    "services": "Dịch vụ",
+    "contact": "Liên hệ",
+    "copyright": "© Smart Hotel Management"
+  },
+  "login": {
+    "title": "Đăng nhập",
+    "welcome": "Chào mừng bạn quay lại Smart Hotel Management",
+    "username": "Tên đăng nhập",
+    "password": "Mật khẩu",
+    "placeholderUsername": "Nhập tên đăng nhập",
+    "placeholderPassword": "Nhập mật khẩu",
+    "forgotPassword": "Quên mật khẩu?",
+    "submit": "Đăng nhập",
+    "or": "Hoặc",
+    "showPwd": "Hiện",
+    "hidePwd": "Ẩn",
+    "wrongCredentials": "Sai tên đăng nhập hoặc mật khẩu",
+    "requiredFields": "Vui lòng nhập username và password!"
+  },
+  "register": {
+    "firstName": "Tên",
+    "lastName": "Họ và tên lót",
+    "phone": "Số điện thoại",
+    "email": "Email",
+    "username": "Tên đăng nhập",
+    "password": "Mật khẩu",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "placeholderLastName": "Nhập họ và tên lót",
+    "placeholderPhone": "Số điện thoại",
+    "placeholderUsername": "Tên đăng nhập",
+    "placeholderConfirm": "Xác nhận mật khẩu"
+  },
+  "profile": {
+    "title": "Hồ sơ của bạn",
+    "continueBooking": "Tiếp tục đặt phòng",
+    "profileInfo": "Thông tin hồ sơ",
+    "fullName": "Họ tên",
+    "email": "Email",
+    "phone": "SĐT",
+    "address": "Địa chỉ",
+    "dob": "Ngày sinh",
+    "points": "Điểm tích lũy",
+    "viewLoyalty": "Xem hạng thành viên",
+    "reservations": "Đơn đặt phòng",
+    "noReservations": "Chưa có đơn nào",
+    "viewDetail": "Xem chi tiết",
+    "reservationHistory": "Lịch sử đặt phòng",
+    "reservationCode": "Mã đặt phòng",
+    "guests": "khách",
+    "total": "Tổng",
+    "detail": "Chi tiết",
+    "review": "Đánh giá",
+    "prev": "Trước",
+    "next": "Sau",
+    "notes": "Ghi chú",
+    "backToProfile": "Quay lại hồ sơ"
+  },
+  "booking": {
+    "title": "Tìm kiếm phòng",
+    "missingDates": "Vui lòng chọn ngày nhận và trả phòng",
+    "noRoomSelected": "Vui lòng chọn ít nhất một phòng",
+    "noRoomsTitle": "Không tìm thấy phòng trống",
+    "noRoomsBody": "Vui lòng thử thay đổi ngày hoặc loại phòng.",
+    "smartSuggestionTitle": "Gợi ý thông minh",
+    "smartSuggestionBody": "Hệ thống tìm thấy khoảng ngày gần nhất còn phòng:",
+    "selectRoom": "Chọn phòng",
+    "deselectRoom": "Bỏ chọn"
+  },
+  "checkout": {
+    "title": "Thông tin đặt phòng",
+    "createPaymentFailed": "Không thể tạo thanh toán!",
+    "cashBookingFailed": "Có lỗi xảy ra khi đặt phòng!",
+    "genericErrorPrefix": "Có lỗi xảy ra:",
+    "agreeTerms": "Tôi đồng ý với điều khoản đặt phòng"
+  },
+  "thankyou": {
+    "successTitle": "Thanh toán thành công",
+    "failureTitle": "Thanh toán thất bại",
+    "successText": "Cảm ơn bạn đã đặt phòng tại khách sạn của chúng tôi.",
+    "failureText": "Rất tiếc, thanh toán của bạn không thành công. Vui lòng thử lại hoặc liên hệ hỗ trợ.",
+    "transactionInfo": "Thông tin giao dịch",
+    "paymentCode": "Mã thanh toán:",
+    "reservationCode": "Mã đặt phòng:",
+    "method": "Phương thức:",
+    "amount": "Số tiền:",
+    "noData": "Không có dữ liệu giao dịch. Bạn có thể quay lại trang chủ.",
+    "viewReservation": "Xem đặt phòng",
+    "retryBooking": "Thử lại đặt phòng",
+    "backHome": "Về trang chủ",
+    "continueBooking": "Tiếp tục đặt phòng",
+    "newBooking": "Đặt phòng mới"
+  },
+  "contact": {
+    "title": "Liên hệ",
+    "address": "Địa chỉ",
+    "directions": "Chỉ đường trên Google Maps",
+    "hotline": "Hotline",
+    "email": "Email"
+  },
+  "services": {
+    "title": "Dịch vụ khách sạn",
+    "subtitle": "Các dịch vụ bổ sung khi lưu trú",
+    "viewDetail": "Xem chi tiết"
+  },
+  "forgotPassword": {
+    "title": "Quên mật khẩu",
+    "description": "Nhập email đăng ký tài khoản. Chúng tôi sẽ gửi link đặt lại mật khẩu (hiệu lực 1 giờ).",
+    "emailLabel": "Email",
+    "sending": "Đang gửi...",
+    "submit": "Gửi link đặt lại mật khẩu",
+    "backToLogin": "Quay lại đăng nhập",
+    "requiredEmail": "Vui lòng nhập email.",
+    "successDefault": "Nếu email tồn tại, bạn sẽ nhận được link đặt lại mật khẩu trong vài phút.",
+    "failDefault": "Gửi yêu cầu thất bại. Vui lòng thử lại."
+  },
+  "resetPassword": {
+    "title": "Đặt lại mật khẩu",
+    "processing": "Đang xử lý...",
+    "submit": "Đặt lại mật khẩu",
+    "missingToken": "Thiếu link đặt lại mật khẩu. Vui lòng dùng link trong email.",
+    "requestAgain": "Yêu cầu gửi lại link",
+    "newPasswordLabel": "Mật khẩu mới (ít nhất 6 ký tự)",
+    "confirmLabel": "Xác nhận mật khẩu",
+    "minLength": "Mật khẩu mới cần ít nhất 6 ký tự.",
+    "mismatch": "Mật khẩu xác nhận không khớp.",
+    "successDefault": "Đặt lại mật khẩu thành công.",
+    "failDefault": "Đặt lại mật khẩu thất bại. Link có thể đã hết hạn.",
+    "cancel": "Hủy"
+  },
+  "reservationDetail": {
+    "notFound": "Không tìm thấy đơn đặt phòng",
+    "back": "Quay lại"
+  },
+  "review": {
+    "submitError": "Gửi đánh giá thất bại",
+    "alreadySubmitted": "Đánh giá đã gửi cho đơn",
+    "alreadySubmittedNote": "Bạn chỉ được đánh giá 1 lần cho mỗi đơn.",
+    "title": "Đánh giá đơn",
+    "rating": "Chấm điểm",
+    "comment": "Nhận xét",
+    "commentPlaceholder": "Nội dung đánh giá...",
+    "send": "Gửi đánh giá",
+    "cancel": "Hủy"
+  },
+  "loyalty": {
+    "reasonDefault": "Tích điểm từ đặt phòng"
+  },
+  "chat": {
+    "roomPrice": "Giá phòng",
+    "policyCancel": "Chính sách hủy phòng",
+    "servicesBuffet": "Dịch vụ & buffet",
+    "howToBook": "Cách đặt phòng",
+    "contactHotel": "Liên hệ khách sạn",
+    "openLabel": "Mở trợ lý ảo",
+    "assistantTitle": "Trợ lý ảo"
+  },
+  "about": {
+    "location": "Vị trí thuận lợi",
+    "service": "Dịch vụ tận tâm",
+    "amenities": "Tiện nghi cao cấp",
+    "quality": "Chất lượng được công nhận",
+    "yearsExp": "Năm kinh nghiệm",
+    "rooms": "Phòng nghỉ",
+    "guests": "Khách hàng hài lòng",
+    "avgRating": "Điểm đánh giá trung bình"
+  }
+}

@@ -23,6 +23,7 @@ import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
  */
 @Configuration
 @PropertySource("classpath:databases.properties")
+@PropertySource(value = "classpath:databases-local.properties", ignoreResourceNotFound = true)
 public class HibernateConfigs {
     
     @Autowired

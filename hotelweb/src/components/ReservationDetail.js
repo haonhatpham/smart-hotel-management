@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Card, Row, Col, Badge, Table, Button, Spinner } from "react-bootstrap";
-import { endpoints } from "../configs/Api";
-import Apis from "../configs/Api";
+import { authApis, endpoints } from "../configs/Api";
 
 const ReservationDetail = () => {
+    const { t } = useTranslation();
     const { id } = useParams();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -12,7 +13,7 @@ const ReservationDetail = () => {
 
     useEffect(() => {
         const url = `${endpoints['reservations']}/${id}`;
-        Apis.get(url)
+        authApis().get(url)
             .then(res => setData(res.data))
             .catch(() => setData(null))
             .finally(() => setLoading(false));
@@ -23,8 +24,9 @@ const ReservationDetail = () => {
     );
 
     if (!data) return (
-        <div className="container my-4">Không tìm thấy đơn đặt phòng.
-            <div className="mt-2"><Button onClick={() => navigate(-1)}>Quay lại</Button></div>
+        <div className="container my-4">
+            {t("reservationDetail.notFound")}
+            <div className="mt-2"><Button onClick={() => navigate(-1)}>{t("reservationDetail.back")}</Button></div>
         </div>
     );
 

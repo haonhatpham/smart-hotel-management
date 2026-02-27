@@ -23,3 +23,7 @@
 hs_err_pid*
 replay_pid*
 /SpringMVC_SMART_HOTEL/target/
+
+# Local config overrides (chứa secret thật - không commit)
+**/*-local.properties
+*.local.properties

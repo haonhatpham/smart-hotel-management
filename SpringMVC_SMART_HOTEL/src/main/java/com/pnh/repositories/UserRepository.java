@@ -19,9 +19,12 @@ public interface UserRepository {
     Users getById(Long id);
 
     Users addUser(Users u);
+    Users updateUser(Users u);
     boolean authenticate(String username, String password);
 
     CustomerProfiles getCustomerProfileByUsername(String username);
-    
+    CustomerProfiles getCustomerProfileByUserId(Long userId);
+    CustomerProfiles saveCustomerProfile(CustomerProfiles profile);
+
     public Users getUserByEmail(String email);
 }

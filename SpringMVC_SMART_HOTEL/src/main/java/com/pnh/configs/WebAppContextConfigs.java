@@ -11,6 +11,7 @@ import com.pnh.formatters.RoomTypeFormatter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
@@ -25,6 +26,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @Configuration
 @EnableWebMvc
+@PropertySource("classpath:chatbot.properties")
+@PropertySource(value = "classpath:chatbot-local.properties", ignoreResourceNotFound = true)
 @ComponentScan(basePackages = {
     "com.pnh.controllers",
     "com.pnh.repositories",

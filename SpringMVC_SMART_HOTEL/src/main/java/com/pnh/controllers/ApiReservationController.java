@@ -5,11 +5,13 @@ import com.pnh.pojo.Reservations;
 import com.pnh.pojo.ReservationRooms;
 import com.pnh.pojo.ServiceOrders;
 import com.pnh.pojo.Invoices;
+import com.pnh.pojo.Users;
 import com.pnh.services.ReservationService;
 import com.pnh.services.UserService;
 import com.pnh.services.RoomService;
 import com.pnh.services.ServiceService;
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -27,9 +29,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 /**
- * API Controller for Hotel Reservations - Client Side Only
+ * API Controller for Hotel Reservations - All endpoints under /api/secure/ require JWT.
  */
 @RestController
 @RequestMapping("/api")
@@ -48,23 +51,60 @@ public class ApiReservationController {
     @Autowired
     private ServiceService serviceService;
 
-    @GetMapping("/reservations")
-    public ResponseEntity<List<Reservations>> list(@RequestParam Map<String, String> params) {
-        return new ResponseEntity<>(this.reservationService.getReservations(params), HttpStatus.OK);
+    /** Chỉ cho phép nếu là chủ đơn hoặc ADMIN/RECEPTION. */
+    private boolean canAccessReservation(Reservations r, Users currentUser) {
+        if (currentUser == null || r == null || r.getCustomerId() == null) return false;
+        if (r.getCustomerId().getId().equals(currentUser.getId())) return true;
+        String role = currentUser.getRole() != null ? currentUser.getRole() : "";
+        return "ADMIN".equals(role) || "RECEPTION".equals(role);
     }
 
-    @GetMapping("/reservations/{id}")
-    public ResponseEntity<?> retrieve(@PathVariable(value = "id") Long id) {
+    @GetMapping("/secure/reservations")
+    public ResponseEntity<?> list(Principal principal, @RequestParam Map<String, String> params) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Chưa đăng nhập"));
+        }
+        Users currentUser = this.userService.getUserByUsername(principal.getName());
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Không tìm thấy người dùng"));
+        }
+        Map<String, String> safeParams = params != null ? new HashMap<>(params) : new HashMap<>();
+        if (!"ADMIN".equals(currentUser.getRole()) && !"RECEPTION".equals(currentUser.getRole())) {
+            safeParams.put("customerId", String.valueOf(currentUser.getId()));
+        }
+        if (safeParams.containsKey("page")) {
+            List<Reservations> items = this.reservationService.getReservations(safeParams);
+            long total = this.reservationService.countReservations(safeParams);
+            Map<String, Object> body = new HashMap<>();
+            body.put("items", items);
+            body.put("total", total);
+            return new ResponseEntity<>(body, HttpStatus.OK);
+        }
+        return new ResponseEntity<>(this.reservationService.getReservations(safeParams), HttpStatus.OK);
+    }
+
+    @GetMapping("/secure/reservations/{id}")
+    public ResponseEntity<?> retrieve(Principal principal, @PathVariable(value = "id") Long id) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Chưa đăng nhập"));
+        }
+        Users currentUser = this.userService.getUserByUsername(principal.getName());
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Không tìm thấy người dùng"));
+        }
         Reservations r = this.reservationService.getById(id);
         if (r == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        if (!canAccessReservation(r, currentUser)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền xem đơn này"));
         }
 
         List<ReservationRooms> rooms = this.reservationService.getReservationRooms(id);
         List<ServiceOrders> services = this.reservationService.getServiceOrders(id);
         var invoice = this.reservationService.getInvoiceByReservationId(id);
 
-        var resp = new java.util.HashMap<String, Object>();
+        var resp = new HashMap<String, Object>();
         resp.put("reservation", r);
         resp.put("rooms", rooms);
         resp.put("services", services);
@@ -72,53 +112,105 @@ public class ApiReservationController {
         return new ResponseEntity<>(resp, HttpStatus.OK);
     }
 
-    @PostMapping("/reservations")
+    @PostMapping("/secure/reservations")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<?> create(@RequestBody ReservationCreateDTO dto) {
-        try {
-            Reservations savedReservation = this.reservationService.createFromDTO(dto);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", savedReservation.getId());
-            response.put("reservationId", savedReservation.getId());
-            response.put("status", savedReservation.getStatus());
-            response.put("message", "Reservation created successfully");
-
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
-        } catch (Exception e) {
-            System.out.println("[ERROR] Exception in create: " + e.getMessage());
-            e.printStackTrace();
-
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", e.getMessage());
-            errorResponse.put("message", "Failed to create reservation");
-
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<?> create(Principal principal, @Valid @RequestBody ReservationCreateDTO dto) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Chưa đăng nhập"));
         }
+        Users currentUser = this.userService.getUserByUsername(principal.getName());
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Không tìm thấy người dùng"));
+        }
+        dto.setCustomerId(currentUser.getId());
+        Reservations savedReservation = this.reservationService.createFromDTO(dto);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", savedReservation.getId());
+        response.put("reservationId", savedReservation.getId());
+        response.put("status", savedReservation.getStatus());
+        response.put("message", "Reservation created successfully");
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PutMapping("/reservations/{id}")
-    public ResponseEntity<Reservations> update(@PathVariable("id") Long id, @RequestBody Reservations reservation) {
+    @PutMapping("/secure/reservations/{id}")
+    public ResponseEntity<?> update(Principal principal, @PathVariable("id") Long id, @RequestBody Reservations reservation) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Chưa đăng nhập"));
+        }
+        Users currentUser = this.userService.getUserByUsername(principal.getName());
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Không tìm thấy người dùng"));
+        }
+        Reservations existing = this.reservationService.getById(id);
+        if (existing == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        if (!canAccessReservation(existing, currentUser)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền sửa đơn này"));
+        }
         reservation.setId(id);
         Reservations updated = this.reservationService.addOrUpdate(reservation);
         return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 
-    @PostMapping("/reservations/{id}/confirm")
-    public ResponseEntity<Reservations> confirm(@PathVariable(value = "id") Long id) {
-        Reservations confirmed = this.reservationService.updateStatus(id, "CONFIRMED");
-        if (confirmed != null) {
-            return new ResponseEntity<>(confirmed, HttpStatus.OK);
+    @PostMapping("/secure/reservations/{id}/confirm")
+    public ResponseEntity<?> confirm(Principal principal, @PathVariable(value = "id") Long id) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Chưa đăng nhập"));
         }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        Users currentUser = this.userService.getUserByUsername(principal.getName());
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Không tìm thấy người dùng"));
+        }
+        Reservations existing = this.reservationService.getById(id);
+        if (existing == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        if (!canAccessReservation(existing, currentUser)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền xác nhận đơn này"));
+        }
+        Reservations confirmed = this.reservationService.updateStatus(id, "CONFIRMED");
+        return new ResponseEntity<>(confirmed, HttpStatus.OK);
     }
 
-    @PostMapping("/reservations/{id}/cancel")
-    public ResponseEntity<Reservations> cancelReservation(@PathVariable(value = "id") Long id) {
-        Reservations cancelledReservation = this.reservationService.updateStatus(id, "CANCELLED");
-        if (cancelledReservation != null) {
-            return new ResponseEntity<>(cancelledReservation, HttpStatus.OK);
+    @PostMapping("/secure/reservations/{id}/cancel")
+    public ResponseEntity<?> cancelReservation(Principal principal, @PathVariable(value = "id") Long id) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Chưa đăng nhập"));
         }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        Users currentUser = this.userService.getUserByUsername(principal.getName());
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Không tìm thấy người dùng"));
+        }
+        Reservations existing = this.reservationService.getById(id);
+        if (existing == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        if (!canAccessReservation(existing, currentUser)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền hủy đơn này"));
+        }
+        Reservations cancelledReservation = this.reservationService.updateStatus(id, "CANCELLED");
+        return new ResponseEntity<>(cancelledReservation, HttpStatus.OK);
+    }
+
+    @GetMapping("/secure/recommendations/me")
+    public ResponseEntity<?> getMyRecommendations(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "success", false,
+                    "message", "Chưa đăng nhập"
+            ));
+        }
+
+        var user = this.userService.getUserByUsername(principal.getName());
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "success", false,
+                    "message", "Không tìm thấy người dùng"
+            ));
+        }
+
+        Map<String, List<Long>> rec = this.reservationService.getRecommendationsForCustomer(user.getId());
+        Map<String, Object> body = new HashMap<>();
+        body.put("success", true);
+        body.put("roomTypeIds", rec.getOrDefault("roomTypeIds", List.of()));
+        body.put("serviceIds", rec.getOrDefault("serviceIds", List.of()));
+
+        return ResponseEntity.ok(body);
     }
 }

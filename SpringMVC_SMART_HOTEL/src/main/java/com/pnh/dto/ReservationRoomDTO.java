@@ -1,5 +1,6 @@
 package com.pnh.dto;
 
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -7,8 +8,11 @@ import java.util.Date;
  * DTO for ReservationRoom data transfer
  */
 public class ReservationRoomDTO {
+    @NotNull(message = "Thiếu thông tin phòng")
     private Long roomId;
+    @NotNull(message = "Thiếu ngày nhận phòng")
     private Date checkIn;
+    @NotNull(message = "Thiếu ngày trả phòng")
     private Date checkOut;
     private BigDecimal pricePerNight;
     private String notes;

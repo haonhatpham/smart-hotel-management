@@ -22,8 +22,10 @@ import java.util.UUID;
 import static com.pnh.utils.HmacUtil.hmacSHA512;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +46,10 @@ import org.springframework.web.client.RestTemplate;
 @Service
 @Transactional
 @PropertySource("classpath:payment-config.properties")
+@PropertySource(value = "classpath:payment-config-local.properties", ignoreResourceNotFound = true)
 public class PaymentServicesImpl implements PaymentService {
+
+    private static final Logger LOG = Logger.getLogger(PaymentServicesImpl.class.getName());
 
     @Value("${momo.partnerCode}")
     private String momoPartnerCode;
@@ -181,14 +186,12 @@ public class PaymentServicesImpl implements PaymentService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             String jsonRequest = new ObjectMapper().writeValueAsString(params);
-            System.out.println("=== MoMo Request JSON ===");
-            System.out.println(jsonRequest);
+            LOG.fine("MoMo request: " + jsonRequest);
 
             HttpEntity<String> entity = new HttpEntity<>(jsonRequest, headers);
             ResponseEntity<String> response = restTemplate.postForEntity(momoEndpoint, entity, String.class);
 
-            System.out.println("=== MoMo Response ===");
-            System.out.println(response.getBody());
+            LOG.fine("MoMo response: " + response.getBody());
 
             // 4. Parse JSON response
             JsonNode jsonNode = new ObjectMapper().readTree(response.getBody());
@@ -209,9 +212,12 @@ public class PaymentServicesImpl implements PaymentService {
         }
     }
 
+    /**
+     * Tạo URL thanh toán VNPay – tham chiếu chuẩn từ mẫu VNPay (ajaxServlet + Config).
+     * - Dùng múi giờ GMT+7, thêm vnp_ExpireDate, encode US_ASCII, vnp_BankCode=NCB cho sandbox.
+     */
     @Override
     public String createVNPayPaymentUrl(Long paymentId, Double amount) {
-        // ===== params =====
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");
         vnp_Params.put("vnp_Command", "pay");
@@ -221,48 +227,62 @@ public class PaymentServicesImpl implements PaymentService {
         vnp_Params.put("vnp_Amount", String.valueOf(vnpAmount));
         vnp_Params.put("vnp_CurrCode", "VND");
         vnp_Params.put("vnp_TxnRef", String.valueOf(paymentId));
-        vnp_Params.put("vnp_OrderInfo", "Payment for reservation");
-        vnp_Params.put("vnp_OrderType", "billpayment");
+        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + paymentId);
+        vnp_Params.put("vnp_OrderType", "other");
         vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_IpAddr", "127.0.0.1");
-        vnp_Params.put("vnp_ReturnUrl", vnpayReturnUrl);
-        vnp_Params.put("vnp_CreateDate", new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
 
-        // ===== build HashData (sorted) and Query =====
+        vnp_Params.put("vnp_IpAddr", "127.0.0.1");
+        String cleanReturnUrl = vnpayReturnUrl != null ? vnpayReturnUrl.trim() : "";
+        vnp_Params.put("vnp_ReturnUrl", cleanReturnUrl);
+
+        // Theo mẫu VNPay: dùng TimeZone GMT+7 và thêm vnp_ExpireDate (CreateDate + 15 phút)
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        String vnp_CreateDate = formatter.format(cld.getTime());
+        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+        cld.add(Calendar.MINUTE, 15);
+        vnp_Params.put("vnp_ExpireDate", formatter.format(cld.getTime()));
+
+        // Sandbox: gửi NCB để tránh lỗi 76 "Ngân hàng không được hỗ trợ"
+        vnp_Params.put("vnp_BankCode", "NCB");
+
+        // Build hashData và query giống ajaxServlet: sort fields, encode value bằng US_ASCII
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
 
         StringBuilder hashData = new StringBuilder();
         StringBuilder query = new StringBuilder();
-
         Iterator<String> itr = fieldNames.iterator();
         while (itr.hasNext()) {
             String fieldName = itr.next();
             String fieldValue = vnp_Params.get(fieldName);
             if (fieldValue != null && fieldValue.length() > 0) {
                 try {
-                    String encodedValue = URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString());
-                    hashData.append(fieldName).append("=").append(encodedValue);
-                    query.append(fieldName).append("=").append(encodedValue);
+                    String encValue = URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString());
+                    hashData.append(fieldName).append('=').append(encValue);
+                    query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
+                    query.append('=').append(encValue);
                     if (itr.hasNext()) {
-                        hashData.append("&");
-                        query.append("&");
+                        hashData.append('&');
+                        query.append('&');
                     }
                 } catch (UnsupportedEncodingException ex) {
                     Logger.getLogger(PaymentServicesImpl.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
+
         String vnp_SecureHash = "";
         try {
             vnp_SecureHash = hmacSHA512(hashData.toString(), vnpayHashSecret);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(PaymentServicesImpl.class.getName()).log(Level.SEVERE, "Error generating VNPay hash", ex);
         }
-
         query.append("&vnp_SecureHash=").append(vnp_SecureHash);
 
-        return vnpayUrl + "?" + query.toString();
+        String paymentUrl = vnpayUrl + "?" + query.toString();
+        LOG.fine("VNPay hashData built");
+        return paymentUrl;
     }
 
     @Override

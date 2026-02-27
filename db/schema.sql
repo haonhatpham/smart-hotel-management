@@ -33,6 +33,17 @@ CREATE TABLE IF NOT EXISTS customer_profiles (
   CONSTRAINT fk_customer_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  token VARCHAR(64) NOT NULL UNIQUE,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_reset_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+CREATE INDEX idx_reset_token ON password_reset_tokens(token);
+CREATE INDEX idx_reset_expires ON password_reset_tokens(expires_at);
+
 -- 2) Danh mục phòng
 CREATE TABLE IF NOT EXISTS room_types (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -162,5 +173,18 @@ CREATE TABLE IF NOT EXISTS reviews (
   CONSTRAINT fk_review_res FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 CREATE INDEX idx_reviews_res ON reviews(reservation_id);
+
+-- 7) Loyalty - lịch sử tích điểm (1 điểm / 10.000 VND khi thanh toán thành công)
+CREATE TABLE IF NOT EXISTS loyalty_log (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  points INT NOT NULL,
+  reason VARCHAR(200) NULL,
+  reservation_id BIGINT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_loyalty_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_loyalty_reservation FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+CREATE INDEX idx_loyalty_user ON loyalty_log(user_id);
 
 

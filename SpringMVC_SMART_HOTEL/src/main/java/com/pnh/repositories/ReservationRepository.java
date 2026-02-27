@@ -27,8 +27,27 @@ public interface ReservationRepository {
 
     List<Reservations> getReservations(Map<String, String> params);
 
+    long countReservations(Map<String, String> params);
+
     ReservationRooms addOrUpdateReservationRoom(ReservationRooms reservationRoom);
     ServiceOrders addOrUpdateServiceOrder(ServiceOrders serviceOrder) ;
     
     List<ReservationRooms> getReservationsRoomByReservationsId(Long id);
+
+    /**
+     * Kiểm tra phòng đã có đặt trùng khoảng ngày (đơn không hủy).
+     * Trùng: tồn tại reservation_room cùng roomId, reservation.status != CANCELLED,
+     * và (existing.check_in < checkOut && existing.check_out > checkIn).
+     */
+    boolean existsOverlappingBooking(Long roomId, java.util.Date checkIn, java.util.Date checkOut);
+
+    /**
+     * Lấy danh sách id loại phòng mà khách này đã đặt nhiều nhất (ưu tiên lịch sử gần đây).
+     */
+    List<Long> findTopRoomTypeIdsByCustomer(Long customerId, int limit);
+
+    /**
+     * Lấy danh sách id dịch vụ mà khách này thường sử dụng nhiều nhất.
+     */
+    List<Long> findTopServiceIdsByCustomer(Long customerId, int limit);
 }

@@ -142,7 +142,6 @@
                     else
                         setErr("Hệ thống có lỗi!");
                 } catch (ex) {
-                    console.error(ex);
                 } finally {
                     setLoading(false);
                 }
