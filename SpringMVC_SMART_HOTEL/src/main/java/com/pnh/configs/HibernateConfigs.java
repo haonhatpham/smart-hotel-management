@@ -40,19 +40,38 @@ public class HibernateConfigs {
         return sessionFactory;
     }
 
-    /** Ưu tiên system property (-D) để override từ docker-entrypoint khi deploy. */
+    /** Ưu tiên: env (Railway), rồi -D, rồi properties file. */
     private String getProp(String key) {
         String v = System.getProperty(key);
-        return (v != null && !v.isBlank()) ? v : env.getProperty(key);
+        if (v != null && !v.isBlank()) return v;
+        return env.getProperty(key);
     }
 
     @Bean
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        String url, user, pass;
+        // Railway MySQL: đọc từ MYSQLHOST, MYSQLUSER... (không cần -D, tránh & trong shell)
+        String host = System.getenv("MYSQLHOST");
+        if (host != null && !host.isBlank()) {
+            String port = System.getenv("MYSQLPORT");
+            if (port == null || port.isBlank()) port = "3306";
+            String db = System.getenv("MYSQL_DATABASE_OVERRIDE");
+            if (db == null || db.isBlank()) db = System.getenv("MYSQLDATABASE");
+            if (db == null || db.isBlank()) db = "railway";
+            url = "jdbc:mysql://" + host + ":" + port + "/" + db
+                + "?allowPublicKeyRetrieval=true&useSSL=true&serverTimezone=UTC";
+            user = System.getenv("MYSQLUSER");
+            pass = System.getenv("MYSQLPASSWORD");
+        } else {
+            url = getProp("hibernate.connection.url");
+            user = getProp("hibernate.connection.username");
+            pass = getProp("hibernate.connection.password");
+        }
         dataSource.setDriverClassName(getProp("hibernate.connection.driverClass"));
-        dataSource.setUrl(getProp("hibernate.connection.url"));
-        dataSource.setUsername(getProp("hibernate.connection.username"));
-        dataSource.setPassword(getProp("hibernate.connection.password"));
+        dataSource.setUrl(url);
+        dataSource.setUsername(user);
+        dataSource.setPassword(pass != null ? pass : "");
         return dataSource;
     }
 

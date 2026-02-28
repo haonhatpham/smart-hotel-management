@@ -21,11 +21,9 @@ _OPTS=""
 [ -n "$VNPAY_TMN_CODE" ] && _OPTS="$_OPTS -Dvnpay.tmnCode=$VNPAY_TMN_CODE"
 [ -n "$VNPAY_HASH_SECRET" ] && _OPTS="$_OPTS -Dvnpay.hashSecret=$VNPAY_HASH_SECRET"
 
-if [ -n "$MYSQLHOST" ]; then
-  _db="${MYSQL_DATABASE_OVERRIDE:-$MYSQLDATABASE}"
-  _url="jdbc:mysql://${MYSQLHOST}:${MYSQLPORT:-3306}/${_db}?allowPublicKeyRetrieval=true%26useSSL=true%26serverTimezone=UTC"
-  _OPTS="$_OPTS -Dhibernate.connection.url=$_url -Dhibernate.connection.username=$MYSQLUSER -Dhibernate.connection.password=$MYSQLPASSWORD"
-else
+# MySQL: HibernateConfigs đọc trực tiếp từ MYSQLHOST, MYSQLUSER, MYSQLPASSWORD (Railway inject)
+# Không dùng -D để tránh & trong URL làm vỡ shell. Chỉ dùng -D khi có HIBERNATE_* (không dùng Railway MySQL)
+if [ -z "$MYSQLHOST" ]; then
   [ -n "$HIBERNATE_CONNECTION_URL" ] && _OPTS="$_OPTS -Dhibernate.connection.url=$HIBERNATE_CONNECTION_URL"
   [ -n "$HIBERNATE_CONNECTION_USERNAME" ] && _OPTS="$_OPTS -Dhibernate.connection.username=$HIBERNATE_CONNECTION_USERNAME"
   [ -n "$HIBERNATE_CONNECTION_PASSWORD" ] && _OPTS="$_OPTS -Dhibernate.connection.password=$HIBERNATE_CONNECTION_PASSWORD"
