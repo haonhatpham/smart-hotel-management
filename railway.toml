@@ -1,0 +1,4 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "SpringMVC_SMART_HOTEL/Dockerfile"
+watchPatterns = ["SpringMVC_SMART_HOTEL/**"]

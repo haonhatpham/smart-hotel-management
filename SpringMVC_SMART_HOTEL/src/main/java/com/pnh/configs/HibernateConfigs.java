@@ -40,17 +40,19 @@ public class HibernateConfigs {
         return sessionFactory;
     }
 
+    /** Ưu tiên system property (-D) để override từ docker-entrypoint khi deploy. */
+    private String getProp(String key) {
+        String v = System.getProperty(key);
+        return (v != null && !v.isBlank()) ? v : env.getProperty(key);
+    }
+
     @Bean
     public DataSource dataSource() {
-        DriverManagerDataSource dataSource
-                = new DriverManagerDataSource();
-        dataSource.setDriverClassName(
-                env.getProperty("hibernate.connection.driverClass"));
-        dataSource.setUrl(env.getProperty("hibernate.connection.url"));
-        dataSource.setUsername(
-                env.getProperty("hibernate.connection.username"));
-        dataSource.setPassword(
-                env.getProperty("hibernate.connection.password"));
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName(getProp("hibernate.connection.driverClass"));
+        dataSource.setUrl(getProp("hibernate.connection.url"));
+        dataSource.setUsername(getProp("hibernate.connection.username"));
+        dataSource.setPassword(getProp("hibernate.connection.password"));
         return dataSource;
     }
 

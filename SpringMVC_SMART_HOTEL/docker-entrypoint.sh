@@ -16,7 +16,8 @@ CATALINA_OPTS="$CATALINA_OPTS"
 [ -n "$VNPAY_HASH_SECRET" ] && CATALINA_OPTS="$CATALINA_OPTS -Dvnpay.hashSecret=$VNPAY_HASH_SECRET"
 # Railway MySQL: dùng MYSQLHOST,... nếu có; không thì dùng HIBERNATE_CONNECTION_*
 if [ -n "$MYSQLHOST" ]; then
-  _url="jdbc:mysql://${MYSQLHOST}:${MYSQLPORT:-3306}/${MYSQLDATABASE}"
+  _db="${MYSQL_DATABASE_OVERRIDE:-$MYSQLDATABASE}"
+  _url="jdbc:mysql://${MYSQLHOST}:${MYSQLPORT:-3306}/${_db}?allowPublicKeyRetrieval=true&useSSL=true&requireSSL=true&serverTimezone=UTC"
   CATALINA_OPTS="$CATALINA_OPTS -Dhibernate.connection.url=$_url -Dhibernate.connection.username=$MYSQLUSER -Dhibernate.connection.password=$MYSQLPASSWORD"
 else
   [ -n "$HIBERNATE_CONNECTION_URL" ] && CATALINA_OPTS="$CATALINA_OPTS -Dhibernate.connection.url=$HIBERNATE_CONNECTION_URL"
