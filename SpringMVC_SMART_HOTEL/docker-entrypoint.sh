@@ -17,8 +17,13 @@ CATALINA_OPTS="$CATALINA_OPTS"
 # Railway MySQL: dùng MYSQLHOST,... nếu có; không thì dùng HIBERNATE_CONNECTION_*
 if [ -n "$MYSQLHOST" ]; then
   _db="${MYSQL_DATABASE_OVERRIDE:-$MYSQLDATABASE}"
-  _url="jdbc:mysql://${MYSQLHOST}:${MYSQLPORT:-3306}/${_db}?allowPublicKeyRetrieval=true%26useSSL=true%26requireSSL=true%26serverTimezone=UTC"
-  CATALINA_OPTS="$CATALINA_OPTS -Dhibernate.connection.url=$_url -Dhibernate.connection.username=$MYSQLUSER -Dhibernate.connection.password=$MYSQLPASSWORD"
+  _url="jdbc:mysql://${MYSQLHOST}:${MYSQLPORT:-3306}/${_db}?allowPublicKeyRetrieval=TRUE&useSSL=TRUE&serverTimezone=UTC"
+
+  CATALINA_OPTS="$CATALINA_OPTS"
+  CATALINA_OPTS="$CATALINA_OPTS -Dhibernate.connection.url=$_url"
+  CATALINA_OPTS="$CATALINA_OPTS -Dhibernate.connection.username=$MYSQLUSER"
+  CATALINA_OPTS="$CATALINA_OPTS -Dhibernate.connection.password=$MYSQLPASSWORD"
+fi
 else
   [ -n "$HIBERNATE_CONNECTION_URL" ] && CATALINA_OPTS="$CATALINA_OPTS -Dhibernate.connection.url=$HIBERNATE_CONNECTION_URL"
   [ -n "$HIBERNATE_CONNECTION_USERNAME" ] && CATALINA_OPTS="$CATALINA_OPTS -Dhibernate.connection.username=$HIBERNATE_CONNECTION_USERNAME"
