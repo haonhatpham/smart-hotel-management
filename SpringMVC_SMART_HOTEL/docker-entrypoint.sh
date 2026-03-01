@@ -19,6 +19,7 @@ if [ -n "$BACKEND_BASE_URL" ]; then
   _OPTS="$_OPTS -Dvnpay.returnUrl=$_BASE/SpringMVC_SMART_HOTEL/api/callback/vnpay -Dmomo.redirectUrl=$_BASE/SpringMVC_SMART_HOTEL/api/callback/momo/guest -Dmomo.ipnUrl=$_BASE/SpringMVC_SMART_HOTEL/api/callback/momo"
 fi
 [ -n "$GEMINI_API_KEY" ] && _OPTS="$_OPTS -Dgemini.api.key=$GEMINI_API_KEY"
+[ -n "$GEMINI_MODEL" ] && _OPTS="$_OPTS -Dgemini.model=$GEMINI_MODEL"
 [ -n "$MOMO_PARTNER_CODE" ] && _OPTS="$_OPTS -Dmomo.partnerCode=$MOMO_PARTNER_CODE"
 [ -n "$MOMO_ACCESS_KEY" ] && _OPTS="$_OPTS -Dmomo.accessKey=$MOMO_ACCESS_KEY"
 [ -n "$MOMO_SECRET_KEY" ] && _OPTS="$_OPTS -Dmomo.secretKey=$MOMO_SECRET_KEY"

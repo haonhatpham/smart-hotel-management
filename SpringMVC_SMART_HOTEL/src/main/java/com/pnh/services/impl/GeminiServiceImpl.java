@@ -23,13 +23,13 @@ public class GeminiServiceImpl implements GeminiService {
 
     private static final Logger LOG = Logger.getLogger(GeminiServiceImpl.class.getName());
 
-    // gemini-2.0-flash là model hỗ trợ generateContent với API key; 429 = hết quota free
-    private static final String GEMINI_MODEL = "gemini-2.0-flash";
-    private static final String GEMINI_URL_TEMPLATE = "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent";
+    private static final String GEMINI_URL_TEMPLATE = "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent";
     private static final int RETRY_DELAY_MS = 45_000;
 
     @Value("${gemini.api.key:}")
     private String apiKey;
+    @Value("${gemini.model:gemini-2.5-flash}")
+    private String model;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -60,7 +60,8 @@ public class GeminiServiceImpl implements GeminiService {
         if (key == null || key.isEmpty()) {
             return null;
         }
-        String url = GEMINI_URL_TEMPLATE + "?key=" + key;
+        String useModel = (model != null && !model.isBlank()) ? model.trim() : "gemini-2.5-flash";
+        String url = String.format(GEMINI_URL_TEMPLATE, useModel) + "?key=" + key;
         String systemInstruction = "Bạn là trợ lý ảo của Smart Hotel. Trả lời ngắn gọn, thân thiện bằng tiếng Việt. "
                 + "Chỉ dựa vào thông tin sau đây để trả lời về giá, phòng, dịch vụ, chính sách. "
                 + "Nếu câu hỏi ngoài phạm vi, nói lịch sự rằng bạn chỉ hỗ trợ thông tin khách sạn.\n\n"
@@ -100,7 +101,7 @@ public class GeminiServiceImpl implements GeminiService {
                     continue;
                 }
                 LOG.warning("Gemini API call failed: " + e.getStatusCode() + " " + e.getMessage()
-                        + " | keySource=" + keySource + ", keyPreview=" + maskKey(key));
+                        + " | model=" + useModel + ", keySource=" + keySource + ", keyPreview=" + maskKey(key));
             } catch (Exception e) {
                 LOG.warning("Gemini API call failed: " + e.getMessage());
             }
