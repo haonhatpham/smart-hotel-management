@@ -9,12 +9,23 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.Authenticator;
 import jakarta.mail.PasswordAuthentication;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MailUtil {
 
     private static final Logger LOG = Logger.getLogger(MailUtil.class.getName());
+    private static final ExecutorService MAIL_EXECUTOR = Executors.newFixedThreadPool(2, r -> {
+        Thread t = new Thread(r, "mail-sender");
+        t.setDaemon(true);
+        return t;
+    });
+
+    public static void sendMailAsync(String to, String subject, String htmlContent) {
+        MAIL_EXECUTOR.submit(() -> sendMail(to, subject, htmlContent));
+    }
 
     public static void sendMail(String to, String subject, String htmlContent) {
         final String from = "haopham081098@gmail.com"; // Gmail của bạn
@@ -26,6 +37,9 @@ public class MailUtil {
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.host", "smtp.gmail.com");
         props.put("mail.smtp.port", "587");
+        props.put("mail.smtp.connectiontimeout", "5000");
+        props.put("mail.smtp.timeout", "5000");
+        props.put("mail.smtp.writetimeout", "5000");
 
         Session session = Session.getInstance(props, new Authenticator() {
             protected PasswordAuthentication getPasswordAuthentication() {

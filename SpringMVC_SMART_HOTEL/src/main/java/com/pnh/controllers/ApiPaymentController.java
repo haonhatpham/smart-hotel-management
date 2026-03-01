@@ -188,7 +188,7 @@ public class ApiPaymentController {
                     String email = reservation.getCustomerId() != null ? reservation.getCustomerId().getEmail() : null;
                     if (email != null) {
                         String[] subjBody = buildBookingConfirmationEmail(reservation, payment.getAmount());
-                        MailUtil.sendMail(email, subjBody[0], subjBody[1]);
+                        MailUtil.sendMailAsync(email, subjBody[0], subjBody[1]);
                     }
                 } catch (Exception mailEx) {
                     LOG.log(java.util.logging.Level.WARNING, "Send booking email failed", mailEx);
@@ -290,7 +290,7 @@ public class ApiPaymentController {
                             String email = r.getCustomerId().getEmail();
                             if (email != null) {
                                 String[] subjBody = buildBookingConfirmationEmail(r, payment.getAmount());
-                                MailUtil.sendMail(email, subjBody[0], subjBody[1]);
+                                MailUtil.sendMailAsync(email, subjBody[0], subjBody[1]);
                             }
                         } catch (Exception mailEx) {
                             LOG.log(java.util.logging.Level.WARNING, "Send mail in IPN failed", mailEx);
@@ -374,7 +374,7 @@ public class ApiPaymentController {
                             String email = r.getCustomerId().getEmail();
                             if (email != null) {
                                 String[] subjBody = buildBookingConfirmationEmail(r, payment.getAmount());
-                                MailUtil.sendMail(email, subjBody[0], subjBody[1]);
+                                MailUtil.sendMailAsync(email, subjBody[0], subjBody[1]);
                             }
                         } catch (Exception mailEx) {
                             LOG.log(java.util.logging.Level.WARNING, "Send mail in VNPay callback failed", mailEx);
