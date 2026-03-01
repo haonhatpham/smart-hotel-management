@@ -235,12 +235,14 @@ public class PaymentServicesImpl implements PaymentService {
         String cleanReturnUrl = vnpayReturnUrl != null ? vnpayReturnUrl.trim() : "";
         vnp_Params.put("vnp_ReturnUrl", cleanReturnUrl);
 
-        // VNPay dùng giờ Việt Nam (UTC+7). Java: Etc/GMT+7 = UTC-7 (sai!), dùng Asia/Ho_Chi_Minh cho đúng.
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+        // VNPay yêu cầu vnp_CreateDate/vnp_ExpireDate theo GMT+7. Cả Calendar VÀ SimpleDateFormat phải set timezone.
+        TimeZone vn = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
+        Calendar cld = Calendar.getInstance(vn);
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        formatter.setTimeZone(vn);
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
-        cld.add(Calendar.MINUTE, 15);
+        cld.add(Calendar.MINUTE, 30);
         vnp_Params.put("vnp_ExpireDate", formatter.format(cld.getTime()));
 
         // Sandbox: gửi NCB để tránh lỗi 76 "Ngân hàng không được hỗ trợ"
