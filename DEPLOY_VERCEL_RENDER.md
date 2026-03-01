@@ -105,6 +105,8 @@
 | `FRONTEND_BASE_URL` | ✓ | URL Vercel (vd: `https://xxx.vercel.app`) |
 | `BACKEND_BASE_URL` | ✓ | URL Backend Railway (vd: `https://xxx.up.railway.app`) |
 | `GEMINI_API_KEY` | (tuỳ chọn) | Chatbot AI; bỏ trống = dùng rule-based |
+| `GOOGLE_CLIENT_ID` | **Cần cho đăng nhập Google** | OAuth Client ID từ Google Cloud Console |
+| `GOOGLE_CLIENT_SECRET` | (tuỳ chọn) | OAuth Client Secret (hiện tại chỉ dùng Client ID) |
 | `MOMO_PARTNER_CODE`, `MOMO_ACCESS_KEY`, `MOMO_SECRET_KEY` | (tuỳ chọn) | Thanh toán MoMo sandbox |
 | `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` | (tuỳ chọn) | Thanh toán VNPay sandbox |
 
@@ -135,5 +137,41 @@
 - [ ] Vercel: Root Directory `hotelweb`, biến `REACT_APP_API_URL` = URL API Railway
 - [ ] Sau Vercel: cập nhật `FRONTEND_BASE_URL` trên Railway
 - [ ] (Tuỳ chọn) Cấu hình callback thanh toán production
+- [ ] (Đăng nhập Google) Cấu hình `GOOGLE_CLIENT_ID` — xem mục dưới
 
 Sau khi xong, mở link Vercel trong trình duyệt để dùng web. Nếu lỗi, mở Console (F12) và tab Network để kiểm tra request API.
+
+---
+
+## Phần 4: Đăng nhập bằng Google (OAuth)
+
+Nếu gặp lỗi **"The OAuth client was not found"** hoặc **"Lỗi 401: invalid_client"** khi đăng nhập Google:
+
+### Bước 4.1: Tạo OAuth credentials trên Google Cloud Console
+
+1. Truy cập https://console.cloud.google.com
+2. Tạo project mới hoặc chọn project có sẵn
+3. Vào **APIs & Services** → **Credentials** → **Create Credentials** → **OAuth client ID**
+4. Nếu chưa có, cấu hình **OAuth consent screen** (chọn External, điền tên app, email hỗ trợ)
+5. Chọn loại **Web application**
+6. **Authorized JavaScript origins** — thêm:
+   - `https://smart-hotel-management.vercel.app` (hoặc URL Vercel của bạn)
+   - `http://localhost:3000` (cho dev local)
+7. Tạo xong → copy **Client ID** (dạng `xxx.apps.googleusercontent.com`)
+
+### Bước 4.2: Cấu hình trên Railway
+
+1. Vào Railway → service Backend → **Variables**
+2. Thêm biến `GOOGLE_CLIENT_ID` = *(dán Client ID vừa copy)*
+3. Backend sẽ tự redeploy và dùng Client ID mới
+
+### Bước 4.3: Cấu hình local (phát triển)
+
+Tạo file `SpringMVC_SMART_HOTEL/src/main/resources/gugle-local.properties`:
+
+```properties
+client_id=YOUR_ACTUAL_GOOGLE_CLIENT_ID
+client_secret=YOUR_ACTUAL_GOOGLE_CLIENT_SECRET
+```
+
+*(Lưu ý: `gugle-local.properties` đã nằm trong `.gitignore` để tránh commit thông tin nhạy cảm.)*

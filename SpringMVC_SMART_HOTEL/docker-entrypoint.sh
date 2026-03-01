@@ -20,6 +20,8 @@ _OPTS=""
 [ -n "$MOMO_SECRET_KEY" ] && _OPTS="$_OPTS -Dmomo.secretKey=$MOMO_SECRET_KEY"
 [ -n "$VNPAY_TMN_CODE" ] && _OPTS="$_OPTS -Dvnpay.tmnCode=$VNPAY_TMN_CODE"
 [ -n "$VNPAY_HASH_SECRET" ] && _OPTS="$_OPTS -Dvnpay.hashSecret=$VNPAY_HASH_SECRET"
+[ -n "$GOOGLE_CLIENT_ID" ] && _OPTS="$_OPTS -Dclient_id=$GOOGLE_CLIENT_ID"
+[ -n "$GOOGLE_CLIENT_SECRET" ] && _OPTS="$_OPTS -Dclient_secret=$GOOGLE_CLIENT_SECRET"
 
 # MySQL: HibernateConfigs đọc trực tiếp từ MYSQLHOST, MYSQLUSER, MYSQLPASSWORD (Railway inject)
 # Không dùng -D để tránh & trong URL làm vỡ shell. Chỉ dùng -D khi có HIBERNATE_* (không dùng Railway MySQL)

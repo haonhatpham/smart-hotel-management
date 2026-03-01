@@ -235,8 +235,8 @@ public class PaymentServicesImpl implements PaymentService {
         String cleanReturnUrl = vnpayReturnUrl != null ? vnpayReturnUrl.trim() : "";
         vnp_Params.put("vnp_ReturnUrl", cleanReturnUrl);
 
-        // Theo mẫu VNPay: dùng TimeZone GMT+7 và thêm vnp_ExpireDate (CreateDate + 15 phút)
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        // VNPay dùng giờ Việt Nam (UTC+7). Java: Etc/GMT+7 = UTC-7 (sai!), dùng Asia/Ho_Chi_Minh cho đúng.
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
