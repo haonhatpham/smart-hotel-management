@@ -33,14 +33,30 @@ public class GeminiServiceImpl implements GeminiService {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private volatile boolean keyProbeLogged = false;
 
     @Override
     public String generateReply(String systemContext, String userMessage) {
-        String key = (apiKey != null ? apiKey : "").trim();
+        String propKey = (apiKey != null ? apiKey : "").trim();
+        String envKey = System.getenv("GEMINI_API_KEY");
+        if (envKey != null) envKey = envKey.trim();
+
+        String key = propKey;
+        String keySource = "gemini.api.key";
         if (key.isEmpty()) {
-            key = System.getenv("GEMINI_API_KEY");
-            if (key != null) key = key.trim();
+            key = envKey;
+            keySource = "GEMINI_API_KEY";
         }
+
+        if (!keyProbeLogged) {
+            if (key == null || key.isEmpty()) {
+                LOG.warning("Gemini key missing: gemini.api.key/GEMINI_API_KEY đều rỗng.");
+            } else {
+                LOG.info("Gemini key loaded from " + keySource + ", preview=" + maskKey(key));
+            }
+            keyProbeLogged = true;
+        }
+
         if (key == null || key.isEmpty()) {
             return null;
         }
@@ -83,13 +99,21 @@ public class GeminiServiceImpl implements GeminiService {
                     }
                     continue;
                 }
-                LOG.warning("Gemini API call failed: " + e.getStatusCode() + " " + e.getMessage());
+                LOG.warning("Gemini API call failed: " + e.getStatusCode() + " " + e.getMessage()
+                        + " | keySource=" + keySource + ", keyPreview=" + maskKey(key));
             } catch (Exception e) {
                 LOG.warning("Gemini API call failed: " + e.getMessage());
             }
             break;
         }
         return null;
+    }
+
+    private String maskKey(String key) {
+        if (key == null || key.isBlank()) return "<empty>";
+        int len = key.length();
+        if (len <= 10) return "<len=" + len + ">";
+        return key.substring(0, 6) + "..." + key.substring(len - 4) + " (len=" + len + ")";
     }
 
     @SuppressWarnings("unchecked")
