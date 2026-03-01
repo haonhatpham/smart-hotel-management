@@ -20,6 +20,13 @@ if [ -n "$BACKEND_BASE_URL" ]; then
 fi
 [ -n "$GEMINI_API_KEY" ] && _OPTS="$_OPTS -Dgemini.api.key=$GEMINI_API_KEY"
 [ -n "$GEMINI_MODEL" ] && _OPTS="$_OPTS -Dgemini.model=$GEMINI_MODEL"
+[ -n "$BREVO_API_KEY" ] && _OPTS="$_OPTS -Dbrevo.api.key=$BREVO_API_KEY"
+[ -n "$MAIL_FROM" ] && _OPTS="$_OPTS -Dmail.from=$MAIL_FROM"
+[ -n "$MAIL_FROM_NAME" ] && _OPTS="$_OPTS -Dmail.from.name=$MAIL_FROM_NAME"
+[ -n "$MAIL_USER" ] && _OPTS="$_OPTS -Dmail.user=$MAIL_USER"
+[ -n "$MAIL_PASS" ] && _OPTS="$_OPTS -Dmail.pass=$MAIL_PASS"
+[ -n "$MAIL_SMTP_HOST" ] && _OPTS="$_OPTS -Dmail.smtp.host=$MAIL_SMTP_HOST"
+[ -n "$MAIL_SMTP_PORT" ] && _OPTS="$_OPTS -Dmail.smtp.port=$MAIL_SMTP_PORT"
 [ -n "$MOMO_PARTNER_CODE" ] && _OPTS="$_OPTS -Dmomo.partnerCode=$MOMO_PARTNER_CODE"
 [ -n "$MOMO_ACCESS_KEY" ] && _OPTS="$_OPTS -Dmomo.accessKey=$MOMO_ACCESS_KEY"
 [ -n "$MOMO_SECRET_KEY" ] && _OPTS="$_OPTS -Dmomo.secretKey=$MOMO_SECRET_KEY"
